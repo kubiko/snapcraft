@@ -22,6 +22,7 @@ import logging
 import os
 import sys
 import textwrap
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,7 @@ _required_systemd = [
 _required_boot = ["squashfs"]
 
 
-def _clone_zfs_cmd(enable_zfs: bool, dest_dir: str) -> list[str]:
+def _clone_zfs_cmd(enable_zfs: bool) -> list[str]:
     """Clone zfs git repository if needed."""
     if enable_zfs:
         return [
@@ -102,7 +103,7 @@ def _clone_zfs_cmd(enable_zfs: bool, dest_dir: str) -> list[str]:
     ]
 
 
-def _clean_old_build_cmd(dest_dir: str) -> list[str]:
+def _clean_old_build_cmd() -> list[str]:
     """Clean previous build."""
     return [
         textwrap.dedent(
@@ -116,10 +117,9 @@ def _clean_old_build_cmd(dest_dir: str) -> list[str]:
 
 
 def _do_base_config_cmd(
-    make_cmd: list[str],
-    config_file: str | None,
-    config_flavour: str | None,
-    defconfig: list[str],
+    make_arg: list[str],
+    config_flavour: Optional[str],
+    defconfig: Optional[list[str]],
     dest_dir: str,
 ) -> list[str]:
     # if the parts build dir already contains a .config file, use it
@@ -128,12 +128,9 @@ def _do_base_config_cmd(
         f"if [ ! -e {dest_dir}/.config ]; then",
     ]
 
-    # if kconfigfile is provided use that
-    # elif kconfigflavour is provided, assemble the ubuntu.flavour config
+    # if kconfigflavour is provided, assemble the ubuntu.flavour config
     # otherwise use defconfig to seed the base config
-    if config_file:
-        cmd.append(f"\tcp {config_file} {dest_dir}/.config")
-    elif config_flavour:
+    if config_flavour:
         logger.info("Using ubuntu config flavour %s", config_flavour)
         conf_cmd = textwrap.dedent(
             f"""	echo "Assembling Ubuntu config..."
@@ -199,17 +196,15 @@ def _do_remake_config_cmd(make_cmd: list[str]) -> list[str]:
 
 def _get_configure_command(
     make_cmd: list[str],
-    config_file: str | None,
-    config_flavour: str | None,
+    config_flavour: Optional[str],
     defconfig: list[str],
-    configs: list[str] | None,
+    configs: Optional[list[str]],
     dest_dir: str,
 ) -> list[str]:
     """Configure the kernel."""
     return [
         *_do_base_config_cmd(
             make_cmd=make_cmd,
-            config_file=config_file,
             config_flavour=config_flavour,
             defconfig=defconfig,
             dest_dir=dest_dir,
@@ -267,37 +262,43 @@ def _do_check_config(builtin: list[str], modules: list[str]):
         logger.warning(warn)
 
 
-def _do_check_initrd(builtin: list[str], modules: list[str], initrd_modules: list[str]):
-    # check all config items are either builtin or part of initrd as modules
+def _do_check_initrd(builtin: list[str], modules: list[str]):
+    # check all config items are either builtin or should be added to initrd as modules
     msg = (
         "**** WARNING **** WARNING **** WARNING **** WARNING ****\n"
         "The following features are deemed boot essential for\n"
         "ubuntu core, consider making them static[=Y] or adding\n"
         "the corresponding module to initrd:\n"
+        "missing options:"
     )
     missing = []
+    include_modules = []
 
     for code in _required_boot:
         opt = f"CONFIG_{code.upper()}"
         if opt in builtin:
             continue
-        if opt in modules and code in initrd_modules:
+        if opt in modules:
+            include_modules.append(opt)
             continue
         missing.append(opt)
 
-    if missing:
+    if missing or include_modules:
         warn = f"\n{msg}\n"
         for opt in missing:
+            warn += f"{opt}\n"
+        warn += "modules to be included in the initrd:\n"
+        for opt in include_modules:
             warn += f"{opt}\n"
         logger.warning(warn)
 
 
-def check_new_config(config_path: str, initrd_modules: list[str]):
+def check_new_config(config_path: str):
     """Check passed kernel config and initrd modules for required dependencies."""
     print("Checking created config...")
     builtin, modules = _do_parse_config(config_path)
     _do_check_config(builtin, modules)
-    _do_check_initrd(builtin, modules, initrd_modules)
+    _do_check_initrd(builtin, modules)
 
 
 def _call_check_config_cmd(dest_dir: str) -> list[str]:
@@ -383,18 +384,15 @@ def get_build_commands(
     make_install_targets: List[str],
     target_arch: str,
     target_arch_triplet: str,
-    config_file: Optional[str],
     config_flavour: Optional[str],
-    defconfig: List[str],
+    defconfig: Optional[List[str]],
     configs: Optional[List[str]],
-    device_trees: Optional[List[str]],
     enable_zfs_support: bool,
     enable_perf: bool,
     project_dir: str,
     source_dir: str,
     build_dir: str,
     install_dir: str,
-    stage_dir: str,
 ) -> list[str]:
     # kernel source can be either CRAFT_PART_SRC or CRAFT_PROJECT_DIR
     return [
@@ -411,7 +409,6 @@ def get_build_commands(
         "",
         *_get_configure_command(
             make_cmd=make_cmd,
-            config_file=config_file,
             config_flavour=config_flavour,
             defconfig=defconfig,
             configs=configs,
@@ -422,7 +419,6 @@ def get_build_commands(
         "",
         *_get_build_command(make_cmd=make_cmd, targets=make_targets),
         *_get_install_command(
-            device_trees=device_trees,
             make_cmd=make_cmd.copy(),
             make_install_targets=make_install_targets,
             build_dir=build_dir,
@@ -483,32 +479,7 @@ def _copy_system_map_cmd(build_dir: str, install_dir: str) -> list[str]:
     return cmd
 
 
-def _copy_dtbs_cmd(device_trees: list[str] | None, install_dir: str) -> list[str]:
-    """Install custom device trees."""
-    if not device_trees:
-        return [""]
-
-    cmd = [
-        'echo "Copying custom dtbs..."',
-        f"mkdir -p {install_dir}/dtbs",
-    ]
-
-    for dtb in [f"{i}.dtb" for i in device_trees]:
-        # Strip any subdirectories
-        subdir_index = dtb.rfind("/")
-        if subdir_index > 0:
-            install_dtb = dtb[subdir_index + 1 :]
-        else:
-            install_dtb = dtb
-
-        cmd.append(
-            f"ln -f ${{KERNEL_BUILD_ARCH_DIR}}/dts/{dtb} {install_dir}/dtbs/{install_dtb}"
-        )
-
-    return cmd
-
-
-def _install_config_cmd(build_dir: str, install_dir: str) -> list[str]:
+def _install_config_cmd(build_dir: str, install_dir: str) -> List[str]:
     """Install the kernel configuration file."""
     # install .config as config-$version
     return [
@@ -542,10 +513,9 @@ def _arrange_install_dir_cmd(install_dir: str) -> list[str]:
 
 
 def _get_post_install_cmd(
-    device_trees: Optional[List[str]],
     build_dir: str,
     install_dir: str,
-) -> List[str]:
+) -> list[str]:
     return [
         "",
         *_parse_kernel_release_cmd(build_dir=build_dir),
@@ -554,21 +524,15 @@ def _get_post_install_cmd(
         "",
         *_copy_system_map_cmd(build_dir=build_dir, install_dir=install_dir),
         "",
-        *_copy_dtbs_cmd(
-            device_trees=device_trees,
-            install_dir=install_dir,
-        ),
-        "",
     ]
 
 
 def _get_install_command(
-    device_trees: Optional[List[str]],
-    make_cmd: List[str],
-    make_install_targets: List[str],
+    make_cmd: list[str],
+    make_install_targets: list[str],
     build_dir: str,
     install_dir: str,
-) -> List[str]:
+) -> list[str]:
     # install to installdir
     # make_cmd = self._make_cmd.copy()
     make_cmd += [
@@ -583,7 +547,6 @@ def _get_install_command(
     # add post-install steps
     cmd.extend(
         _get_post_install_cmd(
-            device_trees=device_trees,
             build_dir=build_dir,
             install_dir=install_dir,
         ),
@@ -632,6 +595,5 @@ def get_deb_architecture(target_arch: str) -> str:
 
     raise ValueError("unknown deb architecture")
 
-
 if __name__ == "__main__":
-    globals()[sys.argv[1]](sys.argv[2], sys.argv[3:])
+    globals()[sys.argv[1]](sys.argv[2])
