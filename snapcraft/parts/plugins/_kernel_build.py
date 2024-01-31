@@ -117,8 +117,8 @@ def _clean_old_build_cmd() -> list[str]:
 
 
 def _do_base_config_cmd(
-    make_arg: list[str],
-    config_flavour: Optional[str],
+    make_cmd: list[str],
+    config_flavour: str,
     defconfig: Optional[list[str]],
     dest_dir: str,
 ) -> list[str]:
@@ -197,8 +197,8 @@ def _do_remake_config_cmd(make_cmd: list[str]) -> list[str]:
 
 def _get_configure_command(
     make_cmd: list[str],
-    config_flavour: Optional[str],
-    defconfig: list[str],
+    config_flavour: str,
+    defconfig: Optional[list[str]],
     configs: Optional[list[str]],
     dest_dir: str,
 ) -> list[str]:
@@ -380,14 +380,13 @@ def _get_perf_build_commands(
 
 
 def get_build_commands(
-    make_cmd: List[str],
-    make_targets: List[str],
-    make_install_targets: List[str],
-    target_arch: str,
+    make_cmd: list[str],
+    make_targets: list[str],
+    make_install_targets: list[str],
     target_arch_triplet: str,
-    config_flavour: Optional[str],
-    defconfig: Optional[List[str]],
-    configs: Optional[List[str]],
+    config_flavour: str,
+    defconfig: Optional[list[str]],
+    configs: Optional[list[str]],
     enable_zfs_support: bool,
     enable_perf: bool,
     project_dir: str,
@@ -395,6 +394,7 @@ def get_build_commands(
     build_dir: str,
     install_dir: str,
 ) -> list[str]:
+    """Get build command"""
     # kernel source can be either CRAFT_PART_SRC or CRAFT_PROJECT_DIR
     return [
         f"[ -d {source_dir}/kernel ] && KERNEL_SRC={source_dir} || KERNEL_SRC={project_dir}",
@@ -454,7 +454,8 @@ def _parse_kernel_release_cmd(build_dir: str) -> list[str]:
         f"KERNEL_RELEASE=$(cat {build_dir}/include/config/kernel.release)",
     ]
 
-def _copy_vmlinuz_cmd(install_dir: str) -> List[str]:
+
+def _copy_vmlinuz_cmd(install_dir: str) -> list[str]:
     """Install kernel image."""
     cmd = [
         'echo "Copying kernel image..."',
@@ -476,7 +477,7 @@ def _copy_system_map_cmd(build_dir: str, install_dir: str) -> list[str]:
     return cmd
 
 
-def _install_config_cmd(build_dir: str, install_dir: str) -> List[str]:
+def _install_config_cmd(build_dir: str, install_dir: str) -> list[str]:
     """Install the kernel configuration file."""
     # install .config as config-$version
     return [
@@ -556,6 +557,7 @@ def _get_install_command(
 
     return cmd
 
+
 ### Utilities
 
 
@@ -591,6 +593,7 @@ def get_deb_architecture(target_arch: str) -> str:
         return "amd64"
 
     raise ValueError("unknown deb architecture")
+
 
 if __name__ == "__main__":
     globals()[sys.argv[1]](sys.argv[2])
