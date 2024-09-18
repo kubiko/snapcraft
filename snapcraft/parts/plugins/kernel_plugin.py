@@ -86,14 +86,12 @@ class KernelPluginProperties(plugins.PluginProperties, frozen=True):
     @pydantic.model_validator(mode="after")
     def validate_plugin_options(self) -> Self:
         """If kernel-image-target is defined, it has to be string or dictionary."""
-        if values.get("kernel_image_target"):
-            if not isinstance(values.get("kernel_image_target"), str):
-                if not isinstance(values.get("kernel_image_target"), dict):
+        if self.kernel_image_target:
+            if not isinstance(self.kernel_image_target, str):
+                if not isinstance(self.kernel_image_target, dict):
                     raise ValueError(
-                        f'kernel-image-target is in invalid format(type{type(values.get("kernel_image_target"))}). It should be either string or dictionary.'
+                        f'kernel-image-target is in invalid format(type{type(self.kernel_image_target)}). It should be either string or dictionary.'
                     )
-
-        return values
 
 
 class KernelPlugin(plugins.Plugin):
@@ -174,7 +172,7 @@ class KernelPlugin(plugins.Plugin):
         return build_packages
 
     @overrides
-    def get_build_environment(self) -> Dict[str, str]:
+    def get_build_environment(
         self,
     ) -> dict[str, str]:  # pylint: disable=missing-function-docstring
         logger.info("Getting build env...")
@@ -187,7 +185,7 @@ class KernelPlugin(plugins.Plugin):
         }
 
     @overrides
-    def get_build_commands(self) -> List[str]:
+    def get_build_commands(
         self,
     ) -> list[str]:  # pylint: disable=missing-function-docstring
         logger.info("Getting build commands...")

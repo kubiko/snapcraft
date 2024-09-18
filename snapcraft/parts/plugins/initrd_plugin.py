@@ -1,7 +1,7 @@
 # -*- Mode:Python; indent-tabs-mode:nil; tab-width:4 -*-
 # pylint: disable=line-too-long,too-many-lines,attribute-defined-outside-init
 #
-# Copyright 2020-2022 Canonical Ltd.
+# Copyright 2020-2022,2024 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as
@@ -97,39 +97,42 @@ setup accordingly.
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Set, cast
+from typing import Any, Literal, cast
 
+import pydantic
 from craft_parts import infos, plugins
 from overrides import overrides
-from pydantic import root_validator
+from typing_extensions import Self
 
 from snapcraft_legacy.plugins.v2 import _initrd_build, _kernel_build
 
 logger = logging.getLogger(__name__)
 
 
-class InitrdPluginProperties(plugins.PluginProperties, plugins.PluginModel):
+class InitrdPluginProperties(plugins.PluginProperties, frozen=True):
     """The part properties used by the Initrd plugin."""
 
-    initrd_build_efi_image: Optional[bool] = False
-    initrd_efi_image_key: Optional[str]
-    initrd_efi_image_cert: Optional[str]
-    initrd_modules: Optional[List[str]]
-    initrd_configured_modules: Optional[List[str]]
-    initrd_firmware: Optional[List[str]]
-    initrd_compression: Optional[str]
-    initrd_compression_options: Optional[List[str]]
-    initrd_overlay: Optional[str]
-    initrd_addons: Optional[List[str]]
+    plugin: Literal["initrd"] = "initrd"
+
+    initrd_build_efi_image: bool = False
+    initrd_efi_image_key: str | None = None
+    initrd_efi_image_cert: str | None = None
+    initrd_modules: list[str] | None = None
+    initrd_configured_modules: list[str] | None = None
+    initrd_firmware: list[str] | None = None
+    initrd_compression: str | None = None
+    initrd_compression_options: list[str] | None = None
+    initrd_overlay: str | None = None
+    initrd_addons: list[str] | None = None
 
     # part properties required by the plugin
-    @root_validator
     @classmethod
-    def validate_pluging_options(cls, values):
+    def validate_plugin_options(self) -> Self:
         """Validate use of initrd-compression-options."""
         # If initrd-compression-options is defined, so has to be initrd-compression.
-        if values.get("initrd_compression_options") and not values.get(
-            "initrd_compression"
+        if(
+            self.initrd_compression_options
+            and not self.initrd_compression
         ):
             raise ValueError(
                 "initrd-compression-options requires also initrd-compression to be defined."
@@ -138,33 +141,18 @@ class InitrdPluginProperties(plugins.PluginProperties, plugins.PluginModel):
         # validate if initrd-efi-image-key or initrd-efi-image-cert is set
         # initrd-build-efi-image is also set
         if (
-            values.get("initrd_efi_image_key") or values.get("initrd_efi_image_cert")
-        ) and not (
-            values.get("initrd_build_efi_image")
-            and values.get("initrd_efi_image_key")
-            and values.get("initrd_efi_image_cert")
+            (
+                self.initrd_efi_image_key or self.initrd_efi_image_cert
+            ) and not (
+            self.initrd_build_efi_image
+            and self.initrd_efi_image_key
+            and self.initrd_efi_image_cert
+            )
         ):
             raise ValueError(
                 "initrd-efi-image-key and initrd-efi-image-cert must be both set if any is set"
                 "used when initrd-build-efi-image is enabled."
             )
-
-        return values
-
-    @classmethod
-    def unmarshal(cls, data: Dict[str, Any]):
-        """Populate class attributes from the part specification.
-
-        :param data: A dictionary containing part properties.
-
-        :return: The populated plugin properties data object.
-
-        :raise pydantic.ValidationError: If validation fails.
-        """
-        plugin_data = plugins.extract_plugin_properties(
-            data, plugin_name="initrd", required=[]
-        )
-        return cls(**plugin_data)
 
 
 class InitrdPlugin(plugins.Plugin):
@@ -193,13 +181,13 @@ class InitrdPlugin(plugins.Plugin):
             self._ubuntu_series = "jammy"
 
     @overrides
-    def get_build_snaps(self) -> Set[str]:  # pylint: disable=missing-function-docstring
+    def get_build_snaps(self) -> set[str]:  # pylint: disable=missing-function-docstring
         return set()
 
     @overrides
     def get_build_packages(
         self,
-    ) -> Set[str]:  # pylint: disable=missing-function-docstring
+    ) -> set[str]:  # pylint: disable=missing-function-docstring
         build_packages = {
             "curl",
             "dracut-core",
@@ -218,7 +206,7 @@ class InitrdPlugin(plugins.Plugin):
     @overrides
     def get_build_environment(
         self,
-    ) -> Dict[str, str]:  # pylint: disable=missing-function-docstring
+    ) -> dict[str, str]:  # pylint: disable=missing-function-docstring
         return {
             "UC_INITRD_ROOT_NAME": "uc-initramfs-build-root",
             "UC_INITRD_ROOT": "${CRAFT_PART_SRC}/${UC_INITRD_ROOT_NAME}",
@@ -231,7 +219,7 @@ class InitrdPlugin(plugins.Plugin):
     @overrides
     def get_build_commands(
         self,
-    ) -> List[str]:  # pylint: disable=missing-function-docstring
+    ) -> list[str]:  # pylint: disable=missing-function-docstring
         logger.info("Getting build commands...")
         return _initrd_build.get_build_commands(
             initrd_modules=self.options.initrd_modules,
