@@ -143,27 +143,19 @@ class TestPluginInitrd(TestCase):
 
     def test_get_base_build_packages(self):
         plugin = self._setup_test()
-        # default initrd compression is zstd
         self.assertEqual(
             plugin.get_build_packages(),
             {
                 "curl",
-                "fakechroot",
-                "fakeroot",
             },
         )
 
     def test_get_base_build_packages_armhf(self):
         plugin = self._setup_test(arch="armv7l")
-        # default initrd compression is zstd
         self.assertEqual(
             plugin.get_build_packages(),
             {
                 "curl",
-                "fakechroot",
-                "fakeroot",
-                "libfakechroot:armhf",
-                "libfakeroot:armhf",
             },
         )
 
@@ -721,21 +713,21 @@ _setup_initrd_chroot_fnc = [
             fi
 
             if [ ! -e "${work_dir}/.${UC_INITRD_ROOT_NAME}.ppa" ]; then
-                run_chroot "${UC_INITRD_ROOT}" "apt-get update"
-                run_chroot "${UC_INITRD_ROOT}" "apt-get dist-upgrade -y"
-                run_chroot "${UC_INITRD_ROOT}" "apt-get install --no-install-recommends -y ca-certificates gpg dirmngr gpg-agent debconf-utils lz4 xz-utils zstd"
+                run_chroot "${UC_INITRD_ROOT}" "echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections"
+                run_chroot "${UC_INITRD_ROOT}" "DEBIAN_FRONTEND=noninteractive apt-get update"
+                run_chroot "${UC_INITRD_ROOT}" "DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y"
+                run_chroot "${UC_INITRD_ROOT}" "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ca-certificates gpg dirmngr gpg-agent debconf-utils lz4 xz-utils zstd"
                 if [ "${UBUNTU_SERIES}" = "focal" ] || [ "${UBUNTU_SERIES}" = "jammy" ]; then
-                    run_chroot "${UC_INITRD_ROOT}" "apt-get install --no-install-recommends -y systemd"
+                    run_chroot "${UC_INITRD_ROOT}" "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y systemd"
                 else
-                    run_chroot "${UC_INITRD_ROOT}" "apt-get install --no-install-recommends -y libsystemd-shared"
+                    run_chroot "${UC_INITRD_ROOT}" "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y libsystemd-shared"
                 fi
                 chroot_add_snappy_dev_ppa "${UBUNTU_SERIES}" "${ppa_fingerprint}"
                 touch "${work_dir}/.${UC_INITRD_ROOT_NAME}.ppa"
             fi
 
             if [ ! -e "${work_dir}/.${UC_INITRD_ROOT_NAME}.u-c-i" ]; then
-                run_chroot "${UC_INITRD_ROOT}" "apt-get update"
-                run_chroot "${UC_INITRD_ROOT}" "echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections"
+                run_chroot "${UC_INITRD_ROOT}" "DEBIAN_FRONTEND=noninteractive apt-get update"
                 # snapd is needed only on focal & jammy systems
                 if [ "${UBUNTU_SERIES}" = "focal" ] || [ "${UBUNTU_SERIES}" = "jammy" ]; then
                     run_chroot "${UC_INITRD_ROOT}" "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y snapd"

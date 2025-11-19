@@ -297,21 +297,21 @@ def _setup_initrd_chroot_fnc_cmd(initrd_ubuntu_core_initramfs_deb: Optional[str]
             fi
 
             if [ ! -e "${{work_dir}}/.${{UC_INITRD_ROOT_NAME}}.ppa" ]; then
-                run_chroot "${{UC_INITRD_ROOT}}" "apt-get update"
-                run_chroot "${{UC_INITRD_ROOT}}" "apt-get dist-upgrade -y"
-                run_chroot "${{UC_INITRD_ROOT}}" "apt-get install --no-install-recommends -y ca-certificates gpg dirmngr gpg-agent debconf-utils lz4 xz-utils zstd"
+                run_chroot "${{UC_INITRD_ROOT}}" "echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections"
+                run_chroot "${{UC_INITRD_ROOT}}" "DEBIAN_FRONTEND=noninteractive apt-get update"
+                run_chroot "${{UC_INITRD_ROOT}}" "DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y"
+                run_chroot "${{UC_INITRD_ROOT}}" "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ca-certificates gpg dirmngr gpg-agent debconf-utils lz4 xz-utils zstd"
                 if [ "${{UBUNTU_SERIES}}" = "focal" ] || [ "${{UBUNTU_SERIES}}" = "jammy" ]; then
-                    run_chroot "${{UC_INITRD_ROOT}}" "apt-get install --no-install-recommends -y systemd"
+                    run_chroot "${{UC_INITRD_ROOT}}" "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y systemd"
                 else
-                    run_chroot "${{UC_INITRD_ROOT}}" "apt-get install --no-install-recommends -y libsystemd-shared"
+                    run_chroot "${{UC_INITRD_ROOT}}" "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y libsystemd-shared"
                 fi
                 chroot_add_snappy_dev_ppa "${{UBUNTU_SERIES}}" "${{ppa_fingerprint}}"
                 touch "${{work_dir}}/.${{UC_INITRD_ROOT_NAME}}.ppa"
             fi
 
             if [ ! -e "${{work_dir}}/.${{UC_INITRD_ROOT_NAME}}.u-c-i" ]; then
-                run_chroot "${{UC_INITRD_ROOT}}" "apt-get update"
-                run_chroot "${{UC_INITRD_ROOT}}" "echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections"
+                run_chroot "${{UC_INITRD_ROOT}}" "DEBIAN_FRONTEND=noninteractive apt-get update"
                 # snapd is needed only on focal & jammy systems
                 if [ "${{UBUNTU_SERIES}}" = "focal" ] || [ "${{UBUNTU_SERIES}}" = "jammy" ]; then
                     run_chroot "${{UC_INITRD_ROOT}}" "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y snapd"

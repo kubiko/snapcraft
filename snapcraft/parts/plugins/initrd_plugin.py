@@ -190,19 +190,7 @@ class InitrdPlugin(plugins.Plugin):
     def get_build_packages(
         self,
     ) -> set[str]:  # pylint: disable=missing-function-docstring
-        build_packages = {
-            "curl",
-            "dracut-core",
-            "fakechroot",
-            "fakeroot",
-        }
-        # if running as non-root and cross-building
-        # we need libfake{ch}root for the target arch
-        if self._cross_building and (os.getuid() != 0):
-            build_packages |= {
-                f"libfakechroot:{self._target_arch}",
-                f"libfakeroot:{self._target_arch}",
-            }
+        build_packages = {"curl"}
         return build_packages
 
     @overrides
