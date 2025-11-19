@@ -657,7 +657,13 @@ _prepare_config_flavour_generic_cmd = [
                 # Clean up kernel source directory
                 pushd "${KERNEL_SRC}"
                 fakeroot debian/rules clean
-                rm -rf CONFIGS/
+                rm -rf CONFIGS
+                # copy debian dir for later use
+                cp -r debian ${CRAFT_PART_BUILD}
+                if [ -d ${KERNEL_SRC}/.git ]; then
+                    rm -rf debian debian.master
+                    git checkout debian debian.master
+                fi
                 popd
             fi
         fi
@@ -684,7 +690,13 @@ _prepare_config_flavour_raspi_cmd = [
                 # Clean up kernel source directory
                 pushd "${KERNEL_SRC}"
                 fakeroot debian/rules clean
-                rm -rf CONFIGS/
+                rm -rf CONFIGS
+                # copy debian dir for later use
+                cp -r debian ${CRAFT_PART_BUILD}
+                if [ -d ${KERNEL_SRC}/.git ]; then
+                    rm -rf debian debian.master
+                    git checkout debian debian.master
+                fi
                 popd
             fi
         fi
@@ -696,10 +708,11 @@ _prepare_kernel_versions = [
     textwrap.dedent(
         """
         echo "Gathering release information"
-        DEBIAN="${KERNEL_SRC}/debian"
-        src_pkg_name=$(sed -n '1s/^\\(.*\\) (.*).*$/\\1/p' "${DEBIAN}/changelog")
-        release=$(sed -n '1s/^'"${src_pkg_name}"'.*(\\(.*\\)-.*).*$/\\1/p' "${DEBIAN}/changelog")
-        revisions=$(sed -n 's/^'"${src_pkg_name}"'\\ .*('"${release}"'-\\(.*\\)).*$/\\1/p' "${DEBIAN}/changelog" | tac)
+        DEBIAN="${CRAFT_PART_BUILD}/debian"
+        DEBIAN_CHANGELOG="${DEBIAN}/changelog"
+        src_pkg_name=$(sed -n '1s/^\\(.*\\) (.*).*$/\\1/p' "${DEBIAN_CHANGELOG}")
+        release=$(sed -n '1s/^'"${src_pkg_name}"'.*(\\(.*\\)-.*).*$/\\1/p' "${DEBIAN_CHANGELOG}")
+        revisions=$(sed -n 's/^'"${src_pkg_name}"'\\ .*('"${release}"'-\\(.*\\)).*$/\\1/p' "${DEBIAN_CHANGELOG}" | tac)
         revision=$(echo ${revisions} | awk '{print $NF}')
         abinum=$(echo ${revision} | sed -r -e 's/([^\\+~]*)\\.[^\\.]+(~.*)?(\\+.*)?$/\\1/')
         abi_release="${release}-${abinum}"
