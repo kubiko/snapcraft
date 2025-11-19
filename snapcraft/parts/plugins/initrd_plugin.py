@@ -107,7 +107,7 @@ import os
 from typing import Literal, cast
 
 import pydantic
-from craft_parts import infos, plugins
+from craft_parts import errors, infos, plugins
 from overrides import overrides
 from typing_extensions import Self
 
@@ -177,10 +177,6 @@ class InitrdPlugin(plugins.Plugin):
             != self._part_info.project_info.target_arch
         ):
             self._cross_building = True
-        base = self._part_info.base
-        self._ubuntu_series = "noble"
-        if base == "core22":
-            self._ubuntu_series = "jammy"
 
     @overrides
     def get_build_snaps(self) -> set[str]:  # pylint: disable=missing-function-docstring
@@ -202,8 +198,6 @@ class InitrdPlugin(plugins.Plugin):
             "UC_INITRD_ROOT": "${CRAFT_PART_SRC}/${UC_INITRD_ROOT_NAME}",
             "KERNEL_MODULES": "${CRAFT_STAGE}/modules",
             "KERNEL_FIRMWARE": "${CRAFT_STAGE}/firmware",
-            "UBUNTU_SERIES": self._ubuntu_series,
-            "UBUNTU_CORE_BASE": self._part_info.base,
         }
 
     @overrides

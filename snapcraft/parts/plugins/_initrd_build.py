@@ -143,10 +143,19 @@ def _setup_ubuntu_base_chroot_fnc_cmd() -> List[str]:
             local work_dir="${1}"
             local series="${2}"
             local ubuntu_base="${work_dir}/ubuntu-base-${series}-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+            local base_url="https://cdimage.ubuntu.com/ubuntu-base/${series}/daily/current/${series}-base-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+            local base_url_in_dev="https://cdimage.ubuntu.com/ubuntu-base/daily/current/${series}-base-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+            local url_status
             rm -rf "${ubuntu_base}"
-            curl \\
-                "https://cdimage.ubuntu.com/ubuntu-base/${series}/daily/current/${series}-base-${CRAFT_ARCH_BUILD_FOR}.tar.gz" \\
-                --output "${ubuntu_base}"
+            url_status=$(curl -s -w "%{http_code}" "${base_url}" --output "${ubuntu_base}")
+            if [ "${url_status}" != "200" ]; then
+                rm -rf "${ubuntu_base}"
+                url_status=$(curl -s -w "%{http_code}" "${base_url_in_dev}" --output "${ubuntu_base}")
+                if [ "${url_status}" != "200" ]; then
+                    echo -e "ERROR: failed to fetch Ubuntu base for Ubuntu ${series} release from: \n${base_url}\nor\n${base_url_in_dev}"
+                    exit 1
+                fi
+            fi
             rm -rf "${UC_INITRD_ROOT}"
             mkdir -p "${UC_INITRD_ROOT}"
             tar --extract --file "${ubuntu_base}" --directory "${UC_INITRD_ROOT}"
@@ -646,6 +655,8 @@ def get_build_commands(
         "",
         *_parse_kernel_release_cmd(),
         "",
+        *_parse_ubuntu_series_cmd(),
+        "",
         *_check_for_stage_firmware_cmd(),
         "",
         *_setup_initrd_build_env_cmd(),
@@ -683,6 +694,17 @@ def _parse_kernel_release_cmd() -> List[str]:
                 echo "ERROR: ${CRAFT_STAGE}/modules contains more than one kernel version, clean up your build environment!"
                 exit 1
             fi
+            """
+        )
+    ]
+
+def _parse_ubuntu_series_cmd() -> List[str]:
+    """Set kernel release from module/<release> directory name."""
+    return [
+        textwrap.dedent(
+            """
+            echo "Parsing Ubuntu release information ..."
+            UBUNTU_SERIES=$(awk -F '=' -e '{if ($1 == "DISTRIB_CODENAME") print $2}' /etc/lsb-release)
             """
         )
     ]

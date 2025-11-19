@@ -236,8 +236,6 @@ class TestPluginInitrd:
             "UC_INITRD_ROOT": "${CRAFT_PART_SRC}/${UC_INITRD_ROOT_NAME}",
             "KERNEL_MODULES": "${CRAFT_STAGE}/modules",
             "KERNEL_FIRMWARE": "${CRAFT_STAGE}/firmware",
-            "UBUNTU_SERIES": "noble",
-            "UBUNTU_CORE_BASE": "core24",
         }
 
     def test_check_get_build_environment_core22(self, setup_method_fixture, new_dir):
@@ -248,8 +246,6 @@ class TestPluginInitrd:
             "UC_INITRD_ROOT": "${CRAFT_PART_SRC}/${UC_INITRD_ROOT_NAME}",
             "KERNEL_MODULES": "${CRAFT_STAGE}/modules",
             "KERNEL_FIRMWARE": "${CRAFT_STAGE}/firmware",
-            "UBUNTU_SERIES": "jammy",
-            "UBUNTU_CORE_BASE": "core22",
         }
 
     def test_check_get_build_command(self, setup_method_fixture, new_dir):
@@ -270,6 +266,7 @@ class TestPluginInitrd:
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
         assert _is_sub_array(build_commands, _setup_initrd_build_env_cmd)
         assert _is_sub_array(build_commands, _parse_kernel_release_cmd)
+        assert _is_sub_array(build_commands, _parse_ubuntu_series_cmd)
         assert _is_sub_array(build_commands, _install_initrd_modules_cmd)
         assert _is_sub_array(build_commands, _initrd_overlay_features_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_firmware_cmd)
@@ -316,6 +313,7 @@ class TestPluginInitrd:
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
         assert _is_sub_array(build_commands, _setup_initrd_build_env_cmd)
         assert _is_sub_array(build_commands, _parse_kernel_release_cmd)
+        assert _is_sub_array(build_commands, _parse_ubuntu_series_cmd)
         assert _is_sub_array(build_commands, _install_initrd_modules_cmd)
         assert _is_sub_array(build_commands, _initrd_overlay_features_cmd)
         assert _is_sub_array(build_commands, _install_initrd_firmware_cmd)
@@ -359,6 +357,7 @@ class TestPluginInitrd:
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
         assert _is_sub_array(build_commands, _setup_initrd_build_env_cmd)
         assert _is_sub_array(build_commands, _parse_kernel_release_cmd)
+        assert _is_sub_array(build_commands, _parse_ubuntu_series_cmd)
         assert _is_sub_array(build_commands, _install_initrd_modules_cmd)
         assert _is_sub_array(build_commands, _initrd_overlay_features_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_firmware_cmd)
@@ -401,6 +400,7 @@ class TestPluginInitrd:
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
         assert _is_sub_array(build_commands, _setup_initrd_build_env_cmd)
         assert _is_sub_array(build_commands, _parse_kernel_release_cmd)
+        assert _is_sub_array(build_commands, _parse_ubuntu_series_cmd)
         assert _is_sub_array(build_commands, _install_initrd_modules_cmd)
         assert _is_sub_array(build_commands, _initrd_overlay_features_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_firmware_cmd)
@@ -443,6 +443,7 @@ class TestPluginInitrd:
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
         assert _is_sub_array(build_commands, _setup_initrd_build_env_cmd)
         assert _is_sub_array(build_commands, _parse_kernel_release_cmd)
+        assert _is_sub_array(build_commands, _parse_ubuntu_series_cmd)
         assert _is_sub_array(build_commands, _install_initrd_modules_cmd)
         assert _is_sub_array(build_commands, _initrd_overlay_features_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_firmware_cmd)
@@ -483,6 +484,7 @@ class TestPluginInitrd:
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
         assert _is_sub_array(build_commands, _setup_initrd_build_env_cmd)
         assert _is_sub_array(build_commands, _parse_kernel_release_cmd)
+        assert _is_sub_array(build_commands, _parse_ubuntu_series_cmd)
         assert _is_sub_array(build_commands, _install_initrd_modules_cmd)
         assert _is_sub_array(build_commands, _initrd_overlay_features_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_firmware_cmd)
@@ -663,10 +665,19 @@ _setup_ubuntu_base_chroot_fnc = [
             local work_dir="${1}"
             local series="${2}"
             local ubuntu_base="${work_dir}/ubuntu-base-${series}-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+            local base_url="https://cdimage.ubuntu.com/ubuntu-base/${series}/daily/current/${series}-base-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+            local base_url_in_dev="https://cdimage.ubuntu.com/ubuntu-base/daily/current/${series}-base-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+            local url_status
             rm -rf "${ubuntu_base}"
-            curl \\
-                "https://cdimage.ubuntu.com/ubuntu-base/${series}/daily/current/${series}-base-${CRAFT_ARCH_BUILD_FOR}.tar.gz" \\
-                --output "${ubuntu_base}"
+            url_status=$(curl -s -w "%{http_code}" "${base_url}" --output "${ubuntu_base}")
+            if [ "${url_status}" != "200" ]; then
+                rm -rf "${ubuntu_base}"
+                url_status=$(curl -s -w "%{http_code}" "${base_url_in_dev}" --output "${ubuntu_base}")
+                if [ "${url_status}" != "200" ]; then
+                    echo -e "ERROR: failed to fetch Ubuntu base for Ubuntu ${series} release from: \n${base_url}\nor\n${base_url_in_dev}"
+                    exit 1
+                fi
+            fi
             rm -rf "${UC_INITRD_ROOT}"
             mkdir -p "${UC_INITRD_ROOT}"
             tar --extract --file "${ubuntu_base}" --directory "${UC_INITRD_ROOT}"
@@ -903,6 +914,15 @@ _parse_kernel_release_cmd = [
             echo "ERROR: ${CRAFT_STAGE}/modules contains more than one kernel version, clean up your build environment!"
             exit 1
         fi
+        """
+    )
+]
+
+_parse_ubuntu_series_cmd = [
+    textwrap.dedent(
+        """
+        echo "Parsing Ubuntu release information ..."
+        UBUNTU_SERIES=$(awk -F '=' -e '{if ($1 == "DISTRIB_CODENAME") print $2}' /etc/lsb-release)
         """
     )
 ]
