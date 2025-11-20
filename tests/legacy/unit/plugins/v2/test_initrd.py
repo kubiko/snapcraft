@@ -533,6 +533,7 @@ _link_files_fnc = [
                     dir_path=$(dirname "${rel_path}")
                     mkdir -p "${3}/${dir_path}"
                     [ "${quiet}" != "--quiet" ] && echo "installing ${f} to ${3}/${dir_path}"
+                    rm -rf "${3}/${dir_path}/$(basename "${f}")" # fixes incremental build "are the same file"
                     ln -f "${f}" "${3}/${dir_path}"
                 fi
                 found="yes"
