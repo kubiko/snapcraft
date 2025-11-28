@@ -644,10 +644,10 @@ _chroot_run_cmd_fnc = [
                     kill -9 "${pid}"
                 fi
             done
-            for m in dev/pts dev/null dev/zero dev/full dev/random dev/urandom dev/tty dev proc run sys
+            for m in proc run sys dev/pts dev/zero dev/full dev/random dev/urandom dev/tty dev/null dev
             do
                 if grep "${chroot_home}/${m}" /proc/self/mounts > /dev/null; then
-                    umount "${chroot_home}/${m}"
+                    umount "${chroot_home}/${m}" || sleep 2 || umount "${chroot_home}/${m}"
                 fi
             done
             set -x
