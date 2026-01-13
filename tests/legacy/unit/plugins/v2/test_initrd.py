@@ -30,8 +30,6 @@ class Initrdv2PluginProperties:
     initrd_modules: Optional[List[str]]
     initrd_configured_modules: Optional[List[str]]
     initrd_firmware: Optional[List[str]]
-    initrd_compression: Optional[str]
-    initrd_compression_options: Optional[List[str]]
     initrd_overlay: Optional[str]
     initrd_addons: Optional[List[str]]
     initrd_ubuntu_core_initramfs_deb: Optional[str]
@@ -51,8 +49,6 @@ class TestPluginInitrd(TestCase):
         initrdconfiguredmodules=None,
         initrdstagefirmware=False,
         initrdfirmware=None,
-        initrdcompression=None,
-        initrdcompressionoptions=None,
         initrdoverlay=None,
         initrdaddons=None,
         initrdubuntucoreinitramfsdeb=None,
@@ -64,8 +60,6 @@ class TestPluginInitrd(TestCase):
             initrd_configured_modules = initrdconfiguredmodules
             initrd_stage_firmware = initrdstagefirmware
             initrd_firmware = initrdfirmware
-            initrd_compression = initrdcompression
-            initrd_compression_options = initrdcompressionoptions
             initrd_overlay = initrdoverlay
             initrd_addons = initrdaddons
             initrd_ubuntu_core_initramfs_deb = initrdubuntucoreinitramfsdeb
@@ -105,17 +99,6 @@ class TestPluginInitrd(TestCase):
                         "default": [],
                     },
                     "initrd-firmware": {
-                        "type": "array",
-                        "minitems": 1,
-                        "uniqueItems": True,
-                        "items": {"type": "string"},
-                        "default": [],
-                    },
-                    "initrd-compression": {
-                        "type": "string",
-                        "enum": ["lz4", "xz", "gz", "zstd"],
-                    },
-                    "initrd-compression-options": {
                         "type": "array",
                         "minitems": 1,
                         "uniqueItems": True,
@@ -170,41 +153,8 @@ class TestPluginInitrd(TestCase):
         self.assertEqual(opt.initrd_modules, None)
         self.assertEqual(opt.initrd_configured_modules, None)
         self.assertEqual(opt.initrd_firmware, None)
-        self.assertEqual(opt.initrd_compression, None)
-        self.assertEqual(opt.initrd_compression_options, None)
         self.assertEqual(opt.initrd_overlay, None)
         self.assertEqual(opt.initrd_addons, None)
-        self.assertEqual(opt.initrd_ubuntu_core_initramfs_deb, None)
-
-    def test_check_configuration_zstd_compression(self):
-        plugin = self._setup_test(
-            initrdcompression="zstd",
-        )
-        opt = plugin.options
-
-        self.assertIs(opt.initrd_modules, None)
-        self.assertIs(opt.initrd_configured_modules, None)
-        self.assertIs(opt.initrd_firmware, None)
-        self.assertEqual(opt.initrd_compression, "zstd")
-        self.assertIs(opt.initrd_compression_options, None)
-        self.assertIs(opt.initrd_overlay, None)
-        self.assertIs(opt.initrd_addons, None)
-        self.assertEqual(opt.initrd_ubuntu_core_initramfs_deb, None)
-
-    def test_check_configuration_lz4_custom_compression(self):
-        plugin = self._setup_test(
-            initrdcompression="lz4",
-            initrdcompressionoptions=["-9", "-l"],
-        )
-        opt = plugin.options
-
-        self.assertIs(opt.initrd_modules, None)
-        self.assertIs(opt.initrd_configured_modules, None)
-        self.assertIs(opt.initrd_firmware, None)
-        self.assertEqual(opt.initrd_compression, "lz4")
-        self.assertEqual(opt.initrd_compression_options, ["-9", "-l"])
-        self.assertIs(opt.initrd_overlay, None)
-        self.assertIs(opt.initrd_addons, None)
         self.assertEqual(opt.initrd_ubuntu_core_initramfs_deb, None)
 
     def test_check_get_build_environment(self):
@@ -273,7 +223,6 @@ class TestPluginInitrd(TestCase):
         assert not _is_sub_array(build_commands, _intatll_initrd_overlay_cmd)
         assert _is_sub_array(build_commands, _prepare_ininird_features_cmd)
         assert _is_sub_array(build_commands, _clean_old_initrd_cmd)
-        assert not _is_sub_array(build_commands, _update_initrd_compression_lz4_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_workaroud_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_cp_modules_conf_cmd)
         assert _is_sub_array(build_commands, _create_inird_cmd)
@@ -281,8 +230,6 @@ class TestPluginInitrd(TestCase):
 
     def test_check_get_build_command_custom_comp_modules_firmw_addons(self):
         plugin = self._setup_test(
-            initrdcompression="lz4",
-            initrdcompressionoptions=["-9", "-l"],
             initrdmodules=["dm-crypt", "slimbus"],
             initrdstagefirmware=True,
             initrdfirmware=["firmware/for/wifi", "firmware/for/webcam"],
@@ -315,7 +262,6 @@ class TestPluginInitrd(TestCase):
         assert not _is_sub_array(build_commands, _intatll_initrd_overlay_cmd)
         assert _is_sub_array(build_commands, _prepare_ininird_features_cmd)
         assert _is_sub_array(build_commands, _clean_old_initrd_cmd)
-        assert _is_sub_array(build_commands, _update_initrd_compression_lz4_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_workaroud_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_cp_modules_conf_cmd)
         assert _is_sub_array(build_commands, _create_inird_cmd)
@@ -327,7 +273,6 @@ class TestPluginInitrd(TestCase):
             initrdmodules=["dm-crypt", "slimbus"],
             initrdconfiguredmodules=["libarc4"],
             initrdoverlay="my-overlay",
-            initrdcompression="gz",
             initrdubuntucoreinitramfsdeb="${CRAFT_STAGE}/ubuntu-core-initramfs_my_build.deb"
         )
 
@@ -354,7 +299,6 @@ class TestPluginInitrd(TestCase):
         assert _is_sub_array(build_commands, _intatll_initrd_overlay_cmd)
         assert _is_sub_array(build_commands, _prepare_ininird_features_cmd)
         assert _is_sub_array(build_commands, _clean_old_initrd_cmd)
-        assert _is_sub_array(build_commands, _update_initrd_compression_gz_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_workaroud_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_cp_modules_conf_cmd)
         assert _is_sub_array(build_commands, _create_inird_cmd)
@@ -392,7 +336,6 @@ class TestPluginInitrd(TestCase):
         assert _is_sub_array(build_commands, _intatll_initrd_overlay_cmd)
         assert _is_sub_array(build_commands, _prepare_ininird_features_cmd)
         assert _is_sub_array(build_commands, _clean_old_initrd_cmd)
-        assert not _is_sub_array(build_commands, _update_initrd_compression_lz4_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_workaroud_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_cp_modules_conf_cmd)
         assert _is_sub_array(build_commands, _create_inird_cmd)
@@ -920,24 +863,6 @@ _clean_old_initrd_cmd = [
         if compgen -G "${CRAFT_PART_INSTALL}/initrd.img*" > /dev/null; then
             rm -rf "${CRAFT_PART_INSTALL}"/initrd.img*
         fi
-        """
-    )
-]
-
-_update_initrd_compression_lz4_cmd = [
-    textwrap.dedent(
-        """
-        echo "Updating compression command to be used for initrd"
-        sed -i 's/lz4 -9 -l/lz4 -9 -l/g' "${UC_INITRD_ROOT}/usr/bin/ubuntu-core-initramfs"',
-        """
-    )
-]
-
-_update_initrd_compression_gz_cmd = [
-    textwrap.dedent(
-        """
-        echo "Updating compression command to be used for initrd"
-        sed -i 's/lz4 -9 -l/gzip -7/g' "${UC_INITRD_ROOT}/usr/bin/ubuntu-core-initramfs"',
         """
     )
 ]

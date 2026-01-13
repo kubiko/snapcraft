@@ -24,9 +24,6 @@ from typing import List, Optional
 logger = logging.getLogger(__name__)
 
 
-_compression_command = {"gz": "gzip", "lz4": "lz4", "xz": "xz", "zstd": "zstd"}
-_compressor_options = {"gz": "-7", "lz4": "-l -9", "xz": "-7", "zstd": "-1 -T0"}
-
 _SNAPPY_DEV_KEY_FINGERPRINT = "F1831DDAFC42E99D"
 
 
@@ -382,13 +379,10 @@ def _setup_initrd_build_env_cmd() -> List[str]:
 
 # pylint: disable-next=too-many-arguments, too-many-locals
 def _make_initrd_cmd(
-    initrd_compression: Optional[str],
-    initrd_compression_options: Optional[List[str]],
     initrd_firmware: Optional[List[str]],
     initrd_addons: Optional[List[str]],
     initrd_overlay: Optional[str],
     initrd_ko_use_workaround: bool,
-    initrd_default_compression: str,
     build_efi_image: Optional[bool],
     efi_image_key: Optional[str],
     efi_image_cert: Optional[str],
@@ -500,22 +494,6 @@ def _make_initrd_cmd(
         """
     )
 
-    # ubuntu-core-initramfs does not support configurable compression command
-    # we still want to support this as configurable option though.
-    comp_command = _compression_cmd(
-        initrd_compression=initrd_compression,
-        initrd_compression_options=initrd_compression_options,
-    )
-
-    cmd_create_initrd_update_compression = ""
-    if comp_command:
-        cmd_create_initrd_update_compression = textwrap.dedent(
-            f"""
-            echo "Updating compression command to be used for initrd"
-            sed -i 's/{initrd_default_compression}/{comp_command}/g' "${{UC_INITRD_ROOT}}/usr/bin/ubuntu-core-initramfs"',
-            """
-        )
-
     cmd_create_initrd_workaround = textwrap.dedent(
         """
         echo "Workaround for bug in ubuntu-core-initramfs"
@@ -611,7 +589,6 @@ def _make_initrd_cmd(
         cmd_prepare_snap_bootstrap_feature,
         'echo "Create new initrd..."',
         cmd_create_initrd_rm_existing,
-        cmd_create_initrd_update_compression,
         cmd_create_initrd_workaround,
         cmd_create_initrd_install_extra_modules,
         cmd_create_initrd_build_initrd,
@@ -625,14 +602,11 @@ def _make_initrd_cmd(
 def get_build_commands(
     initrd_modules: Optional[List[str]],
     initrd_configured_modules: Optional[List[str]],
-    initrd_compression: Optional[str],
-    initrd_compression_options: Optional[List[str]],
     initrd_firmware: Optional[List[str]],
     initrd_addons: Optional[List[str]],
     initrd_overlay: Optional[str],
     initrd_ubuntu_core_initramfs_deb: Optional[str],
     initrd_ko_use_workaround: bool,
-    initrd_default_compression: str,
     build_efi_image: Optional[bool] = False,
     efi_image_key: Optional[str] = None,
     efi_image_cert: Optional[str] = None,
@@ -665,13 +639,10 @@ def get_build_commands(
         'echo "building initramfs..."',
         "",
         *_make_initrd_cmd(
-            initrd_compression=initrd_compression,
-            initrd_compression_options=initrd_compression_options,
             initrd_firmware=initrd_firmware,
             initrd_addons=initrd_addons,
             initrd_overlay=initrd_overlay,
             initrd_ko_use_workaround=initrd_ko_use_workaround,
-            initrd_default_compression=initrd_default_compression,
             build_efi_image=build_efi_image,
             efi_image_key=efi_image_key,
             efi_image_cert=efi_image_cert,
@@ -709,20 +680,3 @@ def _parse_ubuntu_series_cmd() -> List[str]:
             """
         )
     ]
-
-
-def _compression_cmd(
-    initrd_compression: Optional[str], initrd_compression_options: Optional[List[str]]
-) -> str:
-    if not initrd_compression:
-        return ""
-    compressor = _compression_command[initrd_compression]
-    options = ""
-    if initrd_compression_options:
-        options = f"{' '.join(initrd_compression_options)}"
-    else:
-        options = _compressor_options[initrd_compression]
-
-    cmd = f"{compressor} {options}"
-    logger.warning("WARNING: Using custom initrd compressions command: %s", cmd)
-    return cmd

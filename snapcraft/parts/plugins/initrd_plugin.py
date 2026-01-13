@@ -54,19 +54,6 @@ The following initramfs-specific options are provided by this plugin:
       relative paths to stage directory.
       <stage/part install dir>/firmware/* -> initrd:/lib/firmware/*
 
-    - initrd-compression:
-      (string; default: as defined in ubuntu-core-initrd(zstd)
-      initrd compression to use; the only supported values now are
-      'lz4', 'xz', 'gz', 'zstd'.
-
-    - initrd-compression-options:
-      Optional list of parameters to be passed to compressor used for initrd
-      (array of string): defaults are
-        gz:  -7
-        lz4: -9 -l
-        xz:  -7
-        zstd: -1 -T0
-
     - initrd-overlay
       (string; default: none)
       Optional overlay to be applied to built initrd.
@@ -103,11 +90,10 @@ setup accordingly.
 """
 
 import logging
-import os
 from typing import Literal, cast
 
 import pydantic
-from craft_parts import errors, infos, plugins
+from craft_parts import infos, plugins
 from overrides import overrides
 from typing_extensions import Self
 
@@ -127,8 +113,6 @@ class InitrdPluginProperties(plugins.PluginProperties, frozen=True):
     initrd_modules: list[str] | None = None
     initrd_configured_modules: list[str] | None = None
     initrd_firmware: list[str] | None = None
-    initrd_compression: str | None = None
-    initrd_compression_options: list[str] | None = None
     initrd_overlay: str | None = None
     initrd_addons: list[str] | None = None
     initrd_ubuntu_core_initramfs_deb: str | None = None
@@ -136,13 +120,6 @@ class InitrdPluginProperties(plugins.PluginProperties, frozen=True):
     # part properties required by the plugin
     @pydantic.model_validator(mode="after")
     def validate_plugin_options(self) -> Self:
-        """Validate use of initrd-compression-options."""
-        # If initrd-compression-options is defined, so has to be initrd-compression.
-        if self.initrd_compression_options and not self.initrd_compression:
-            raise ValueError(
-                "initrd-compression-options requires also initrd-compression to be defined."
-            )
-
         # validate if initrd-efi-image-key or initrd-efi-image-cert is set
         # initrd-build-efi-image is also set
         if (self.initrd_efi_image_key or self.initrd_efi_image_cert) and not (
@@ -208,14 +185,11 @@ class InitrdPlugin(plugins.Plugin):
         return _initrd_build.get_build_commands(
             initrd_modules=self.options.initrd_modules,
             initrd_configured_modules=self.options.initrd_configured_modules,
-            initrd_compression=self.options.initrd_compression,
-            initrd_compression_options=self.options.initrd_compression_options,
             initrd_firmware=self.options.initrd_firmware,
             initrd_addons=self.options.initrd_addons,
             initrd_overlay=self.options.initrd_overlay,
             initrd_ubuntu_core_initramfs_deb=self.options.initrd_ubuntu_core_initramfs_deb,
             initrd_ko_use_workaround=False,
-            initrd_default_compression="zstd -1 -T0",
             build_efi_image=self.options.initrd_build_efi_image,
             efi_image_key=self.options.initrd_efi_image_key,
             efi_image_cert=self.options.initrd_efi_image_cert,
