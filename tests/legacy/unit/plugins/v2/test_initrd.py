@@ -687,7 +687,7 @@ _setup_initrd_chroot_fnc = [
                 fi
 
                 stage_ubuntu_core_initramfs_deb
-                run_chroot "${UC_INITRD_ROOT}" "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ubuntu-core-initramfs"
+                run_chroot "${UC_INITRD_ROOT}" "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --allow-downgrades -y ubuntu-core-initramfs"
                 touch "${work_dir}/.${UC_INITRD_ROOT_NAME}.u-c-i"
             fi
 
