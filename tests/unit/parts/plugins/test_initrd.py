@@ -1035,14 +1035,14 @@ _create_efi_image_cmd = [
         """
         echo "Building kernel.efi"
         rm -rf ${UC_INITRD_ROOT}/boot/kernel.efi*
-        ln -f "${CRAFT_STAGE}"/kernel.img "${UC_INITRD_ROOT}/boot/kernel.img-${KERNEL_RELEASE}"
+        ln -f "${CRAFT_STAGE}"/kernel.bin "${UC_INITRD_ROOT}/boot/kernel.bin-${KERNEL_RELEASE}"
         run_chroot "${UC_INITRD_ROOT}" \\
                 "ubuntu-core-initramfs create-efi \\
                     --kernelver=${KERNEL_RELEASE} \\
                     --key /usr/lib/ubuntu-core-initramfs/snakeoil/PkKek-1-snakeoil.key \\
                     --cert /usr/lib/ubuntu-core-initramfs/snakeoil/PkKek-1-snakeoil.pem \\
                     --initrd /boot/initrd.img \\
-                    --kernel /boot/kernel.img \\
+                    --kernel /boot/kernel.bin \\
                     --output /boot/kernel.efi"
 
         echo "Installing created kernel.efi image"
@@ -1058,14 +1058,14 @@ _create_efi_image_custom_keys_cmd = [
         """
         echo "Building kernel.efi"
         rm -rf ${UC_INITRD_ROOT}/boot/kernel.efi*
-        ln -f "${CRAFT_STAGE}"/kernel.img "${UC_INITRD_ROOT}/boot/kernel.img-${KERNEL_RELEASE}"
+        ln -f "${CRAFT_STAGE}"/kernel.bin "${UC_INITRD_ROOT}/boot/kernel.bin-${KERNEL_RELEASE}"
         run_chroot "${UC_INITRD_ROOT}" \\
                 "ubuntu-core-initramfs create-efi \\
                     --kernelver=${KERNEL_RELEASE} \\
                     --key /root/efi-signing-key.key \\
                     --cert /root/efi-certificate.pem \\
                     --initrd /boot/initrd.img \\
-                    --kernel /boot/kernel.img \\
+                    --kernel /boot/kernel.bin \\
                     --output /boot/kernel.efi"
 
         echo "Installing created kernel.efi image"

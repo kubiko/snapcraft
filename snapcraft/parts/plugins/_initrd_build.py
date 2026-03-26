@@ -562,14 +562,14 @@ def _make_initrd_cmd(
             f"""
             echo "Building kernel.efi"
             rm -rf ${{UC_INITRD_ROOT}}/boot/kernel.efi*
-            ln -f "${{CRAFT_STAGE}}"/kernel.img "${{UC_INITRD_ROOT}}/boot/kernel.img-${{KERNEL_RELEASE}}"
+            ln -f "${{CRAFT_STAGE}}"/kernel.bin "${{UC_INITRD_ROOT}}/boot/kernel.bin-${{KERNEL_RELEASE}}"
             run_chroot "${{UC_INITRD_ROOT}}" \\
                     "ubuntu-core-initramfs create-efi \\
                         --kernelver=${{KERNEL_RELEASE}} \\
                         --key {signing_key} \\
                         --cert {certificate} \\
                         --initrd /boot/initrd.img \\
-                        --kernel /boot/kernel.img \\
+                        --kernel /boot/kernel.bin \\
                         --output /boot/kernel.efi"
 
             echo "Installing created kernel.efi image"
