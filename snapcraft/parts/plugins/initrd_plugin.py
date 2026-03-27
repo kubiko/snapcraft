@@ -97,7 +97,7 @@ from craft_parts import infos, plugins
 from overrides import overrides
 from typing_extensions import Self
 
-from snapcraft_legacy.plugins.v2 import _initrd_build, _kernel_build
+from . import _initrd_build, _kernel_build
 
 logger = logging.getLogger(__name__)
 
