@@ -928,10 +928,10 @@ _post_install_steps_cmd = [
         KERNEL_RELEASE=$(cat "${CRAFT_PART_BUILD}/include/config/kernel.release")
 
         echo "Copying kernel image..."
-        # if kernel.img already exists, replace it, we are probably re-running
+        # if ${KERNEL_IMAGE_TARGET} already exists, replace it, we are probably re-running
         # build
-        [ -e "${CRAFT_PART_INSTALL}/kernel.img" ] && rm -rf "${CRAFT_PART_INSTALL}/kernel.img"
-        mv "${KERNEL_BUILD_ARCH_DIR}/${KERNEL_IMAGE_TARGET}" "${CRAFT_PART_INSTALL}/kernel.img"
+        [ -e "${CRAFT_PART_INSTALL}/${KERNEL_IMAGE_TARGET}" ] && rm -rf "${CRAFT_PART_INSTALL}/${KERNEL_IMAGE_TARGET}"
+        mv "${KERNEL_BUILD_ARCH_DIR}/${KERNEL_IMAGE_TARGET}" "${CRAFT_PART_INSTALL}/${KERNEL_IMAGE_TARGET}"
 
         echo "Copying System map..."
         [ -e "${CRAFT_PART_INSTALL}/System.map" ] && rm -rf "${CRAFT_PART_INSTALL}"/System.map*
