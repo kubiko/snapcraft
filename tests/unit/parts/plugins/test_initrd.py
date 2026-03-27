@@ -1035,7 +1035,20 @@ _create_efi_image_cmd = [
         """
         echo "Building kernel.efi"
         rm -rf ${UC_INITRD_ROOT}/boot/kernel.efi*
-        ln -f "${CRAFT_STAGE}"/kernel.bin "${UC_INITRD_ROOT}/boot/kernel.bin-${KERNEL_RELEASE}"
+        # try default kernel target first
+        if [ -e "${CRAFT_STAGE}/Image" ]; then
+            ln -f "${CRAFT_STAGE}/Image" "${UC_INITRD_ROOT}/boot/kernel.bin-${KERNEL_RELEASE}"
+        # try other kernel targets as fallback
+        else
+            for t in bzImage zImage Image uImage vmlinux.strip
+            do
+                if [ -e "${CRAFT_STAGE}/${t}" ]; then
+                    ln -f "${CRAFT_STAGE}/${t}" "${UC_INITRD_ROOT}/boot/kernel.bin-${KERNEL_RELEASE}"
+                    break;
+                fi
+            done
+        fi
+
         run_chroot "${UC_INITRD_ROOT}" \\
                 "ubuntu-core-initramfs create-efi \\
                     --kernelver=${KERNEL_RELEASE} \\
@@ -1058,7 +1071,20 @@ _create_efi_image_custom_keys_cmd = [
         """
         echo "Building kernel.efi"
         rm -rf ${UC_INITRD_ROOT}/boot/kernel.efi*
-        ln -f "${CRAFT_STAGE}"/kernel.bin "${UC_INITRD_ROOT}/boot/kernel.bin-${KERNEL_RELEASE}"
+        # try default kernel target first
+        if [ -e "${CRAFT_STAGE}/Image" ]; then
+            ln -f "${CRAFT_STAGE}/Image" "${UC_INITRD_ROOT}/boot/kernel.bin-${KERNEL_RELEASE}"
+        # try other kernel targets as fallback
+        else
+            for t in bzImage zImage Image uImage vmlinux.strip
+            do
+                if [ -e "${CRAFT_STAGE}/${t}" ]; then
+                    ln -f "${CRAFT_STAGE}/${t}" "${UC_INITRD_ROOT}/boot/kernel.bin-${KERNEL_RELEASE}"
+                    break;
+                fi
+            done
+        fi
+
         run_chroot "${UC_INITRD_ROOT}" \\
                 "ubuntu-core-initramfs create-efi \\
                     --kernelver=${KERNEL_RELEASE} \\

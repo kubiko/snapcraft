@@ -386,6 +386,7 @@ def _make_initrd_cmd(
     build_efi_image: Optional[bool],
     efi_image_key: Optional[str],
     efi_image_cert: Optional[str],
+    default_kernel_target: Optional[str],
 ) -> List[str]:
     cmd_echo = [
         'echo "Generating initrd with ko modules for kernel release: ${KERNEL_RELEASE}"',
@@ -562,7 +563,20 @@ def _make_initrd_cmd(
             f"""
             echo "Building kernel.efi"
             rm -rf ${{UC_INITRD_ROOT}}/boot/kernel.efi*
-            ln -f "${{CRAFT_STAGE}}"/kernel.bin "${{UC_INITRD_ROOT}}/boot/kernel.bin-${{KERNEL_RELEASE}}"
+            # try default kernel target first
+            if [ -e "${{CRAFT_STAGE}}/{default_kernel_target}" ]; then
+                ln -f "${{CRAFT_STAGE}}/{default_kernel_target}" "${{UC_INITRD_ROOT}}/boot/kernel.bin-${{KERNEL_RELEASE}}"
+            # try other kernel targets as fallback
+            else
+                for t in bzImage zImage Image uImage vmlinux.strip
+                do
+                    if [ -e "${{CRAFT_STAGE}}/${{t}}" ]; then
+                        ln -f "${{CRAFT_STAGE}}/${{t}}" "${{UC_INITRD_ROOT}}/boot/kernel.bin-${{KERNEL_RELEASE}}"
+                        break;
+                    fi
+                done
+            fi
+
             run_chroot "${{UC_INITRD_ROOT}}" \\
                     "ubuntu-core-initramfs create-efi \\
                         --kernelver=${{KERNEL_RELEASE}} \\
@@ -610,6 +624,7 @@ def get_build_commands(
     build_efi_image: Optional[bool] = False,
     efi_image_key: Optional[str] = None,
     efi_image_cert: Optional[str] = None,
+    default_kernel_target: Optional[str] = None,
 ) -> List[str]:
     """Get build command"""
     return [
@@ -646,6 +661,7 @@ def get_build_commands(
             build_efi_image=build_efi_image,
             efi_image_key=efi_image_key,
             efi_image_cert=efi_image_cert,
+            default_kernel_target=default_kernel_target,
         ),
         'echo "Initramfs build finished!"',
     ]

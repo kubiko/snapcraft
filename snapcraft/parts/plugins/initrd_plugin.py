@@ -147,6 +147,9 @@ class InitrdPlugin(plugins.Plugin):
         self._target_arch = self._part_info.target_arch
         target_arch = self._part_info.target_arch
         self._deb_arch = _kernel_build.get_deb_architecture(target_arch)
+        self.default_kernel_target = _kernel_build.default_kernel_image_target[
+            self._deb_arch
+        ]
         # check if we are cross building
         self._cross_building = False
         if (
@@ -193,6 +196,7 @@ class InitrdPlugin(plugins.Plugin):
             build_efi_image=self.options.initrd_build_efi_image,
             efi_image_key=self.options.initrd_efi_image_key,
             efi_image_cert=self.options.initrd_efi_image_cert,
+            default_kernel_target=self.default_kernel_target,
         )
 
     @classmethod
