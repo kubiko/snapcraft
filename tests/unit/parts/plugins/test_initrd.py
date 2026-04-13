@@ -207,10 +207,7 @@ class TestPluginInitrd:
 
         assert _is_sub_array(build_commands, _initrd_modules_empty_cmd)
         assert _is_sub_array(build_commands, _initrd_configured_modules_empty_cmd)
-        assert _is_sub_array(build_commands, _link_files_fnc)
-        assert _is_sub_array(build_commands, _setup_ubuntu_base_chroot_fnc)
-        assert _is_sub_array(build_commands, _chroot_add_snappy_dev_ppa_fnc)
-        assert _is_sub_array(build_commands, _chroot_run_cmd_fnc)
+        assert _is_sub_array(build_commands, _helper_fncs_cmd)
         assert _is_sub_array(build_commands, _setup_stage_u_c_i_deb_release_fnc)
         assert _is_sub_array(build_commands, _setup_initrd_chroot_fnc)
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
@@ -250,11 +247,7 @@ class TestPluginInitrd:
         build_commands = plugin.get_build_commands()
         assert _is_sub_array(build_commands, _initrd_modules_cmd)
         assert _is_sub_array(build_commands, _initrd_configured_modules_empty_cmd)
-        assert _is_sub_array(build_commands, _link_files_fnc)
-        assert _is_sub_array(build_commands, _link_files_fnc)
-        assert _is_sub_array(build_commands, _setup_ubuntu_base_chroot_fnc)
-        assert _is_sub_array(build_commands, _chroot_add_snappy_dev_ppa_fnc)
-        assert _is_sub_array(build_commands, _chroot_run_cmd_fnc)
+        assert _is_sub_array(build_commands, _helper_fncs_cmd)
         assert _is_sub_array(build_commands, _setup_stage_u_c_i_deb_release_fnc)
         assert _is_sub_array(build_commands, _setup_initrd_chroot_fnc)
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
@@ -292,11 +285,7 @@ class TestPluginInitrd:
         build_commands = plugin.get_build_commands()
         assert _is_sub_array(build_commands, _initrd_modules_cmd)
         assert _is_sub_array(build_commands, _initrd_configured_modules_cmd)
-        assert _is_sub_array(build_commands, _link_files_fnc)
-        assert _is_sub_array(build_commands, _link_files_fnc)
-        assert _is_sub_array(build_commands, _setup_ubuntu_base_chroot_fnc)
-        assert _is_sub_array(build_commands, _chroot_add_snappy_dev_ppa_fnc)
-        assert _is_sub_array(build_commands, _chroot_run_cmd_fnc)
+        assert _is_sub_array(build_commands, _helper_fncs_cmd)
         assert _is_sub_array(build_commands, _setup_stage_u_c_i_deb_custom_fnc)
         assert _is_sub_array(build_commands, _setup_initrd_chroot_custom_u_c_i_fnc)
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
@@ -334,11 +323,7 @@ class TestPluginInitrd:
         build_commands = plugin.get_build_commands()
         assert _is_sub_array(build_commands, _initrd_modules_cmd)
         assert _is_sub_array(build_commands, _initrd_configured_modules_cmd)
-        assert _is_sub_array(build_commands, _link_files_fnc)
-        assert _is_sub_array(build_commands, _link_files_fnc)
-        assert _is_sub_array(build_commands, _setup_ubuntu_base_chroot_fnc)
-        assert _is_sub_array(build_commands, _chroot_add_snappy_dev_ppa_fnc)
-        assert _is_sub_array(build_commands, _chroot_run_cmd_fnc)
+        assert _is_sub_array(build_commands, _helper_fncs_cmd)
         assert _is_sub_array(build_commands, _setup_stage_u_c_i_deb_release_fnc)
         assert _is_sub_array(build_commands, _setup_initrd_chroot_fnc)
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
@@ -377,10 +362,7 @@ class TestPluginInitrd:
         build_commands = plugin.get_build_commands()
         assert _is_sub_array(build_commands, _initrd_modules_empty_cmd)
         assert _is_sub_array(build_commands, _initrd_configured_modules_empty_cmd)
-        assert _is_sub_array(build_commands, _link_files_fnc)
-        assert _is_sub_array(build_commands, _setup_ubuntu_base_chroot_fnc)
-        assert _is_sub_array(build_commands, _chroot_add_snappy_dev_ppa_fnc)
-        assert _is_sub_array(build_commands, _chroot_run_cmd_fnc)
+        assert _is_sub_array(build_commands, _helper_fncs_cmd)
         assert _is_sub_array(build_commands, _setup_stage_u_c_i_deb_release_fnc)
         assert _is_sub_array(build_commands, _setup_initrd_chroot_fnc)
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
@@ -417,10 +399,7 @@ class TestPluginInitrd:
         build_commands = plugin.get_build_commands()
         assert _is_sub_array(build_commands, _initrd_modules_empty_cmd)
         assert _is_sub_array(build_commands, _initrd_configured_modules_empty_cmd)
-        assert _is_sub_array(build_commands, _link_files_fnc)
-        assert _is_sub_array(build_commands, _setup_ubuntu_base_chroot_fnc)
-        assert _is_sub_array(build_commands, _chroot_add_snappy_dev_ppa_fnc)
-        assert _is_sub_array(build_commands, _chroot_run_cmd_fnc)
+        assert _is_sub_array(build_commands, _helper_fncs_cmd)
         assert _is_sub_array(build_commands, _setup_stage_u_c_i_deb_release_fnc)
         assert _is_sub_array(build_commands, _setup_initrd_chroot_fnc)
         assert _is_sub_array(build_commands, _check_for_stage_firmware_cmd)
@@ -523,212 +502,192 @@ _initrd_configured_modules_cmd = [
     )
 ]
 
-_link_files_fnc = [
+_helper_fncs_cmd = [
     textwrap.dedent(
         """
-        # link files helper, accept wild cards
-        # 1: reference dir, 2: file(s) including wild cards, 3: dst dir
-        # 4: quiet mode [ "--quiet" ] (optional)
-        link_files() {
-            set +x
-            link_files_impl ${@}
-            local retVal=$?
-            set -x
-            return ${retVal}
-        }
+# link files helper, accept wild cards
+# 1: reference dir, 2: file(s) including wild cards, 3: dst dir
+# 4: quiet mode [ "--quiet" ] (optional)
+link_files() {
+    set +x
+    link_files_impl ${@}
+    local retVal=$?
+    set -x
+    return ${retVal}
+}
 
-        # link files helper implementation, accept wild cards
-        # 1: reference dir, 2: file(s) including wild cards, 3: dst dir
-        # 4: quiet mode [ "--quiet" ] (optional)
-        link_files_impl() {
-            if [ -z "${2}" ]; then
-                return 0
-            fi
-            local quiet="${4:--noisy}"
-            local f
-            if [ "${2}" = "*" ]; then
-                while IFS= read -r -d $'\\0' f
-                do
-                    link_files_impl "${1}" "${f}" "${3}" "${quiet}"
-                done < <(find "${1}" -maxdepth 1 -mindepth 1 -printf '%P\\0')
-                return 0
-            fi
-            if [ -d "${1}/${2}" ]; then
-                while IFS= read -r -d $'\\0' f
-                do
-                    link_files_impl "${1}" "${2}/${f}" "${3}" "${quiet}"
-                done < <(find "${1}/${2}" -maxdepth 1 -mindepth 1 -printf '%P\\0')
-                return 0
-            fi
+# link files helper implementation, accept wild cards
+# 1: reference dir, 2: file(s) including wild cards, 3: dst dir
+# 4: quiet mode [ "--quiet" ] (optional)
+link_files_impl() {
+    if [ -z "${2}" ]; then
+        return 0
+    fi
+    local quiet="${4:--noisy}"
+    local f
+    if [ "${2}" = "*" ]; then
+        while IFS= read -r -d $'\\0' f
+        do
+            link_files_impl "${1}" "${f}" "${3}" "${quiet}"
+        done < <(find "${1}" -maxdepth 1 -mindepth 1 -printf '%P\\0')
+        return 0
+    fi
+    if [ -d "${1}/${2}" ]; then
+        while IFS= read -r -d $'\\0' f
+        do
+            link_files_impl "${1}" "${2}/${f}" "${3}" "${quiet}"
+        done < <(find "${1}/${2}" -maxdepth 1 -mindepth 1 -printf '%P\\0')
+        return 0
+    fi
 
-            local found searchdir basename rel_path dir_path
-            searchdir=$(dirname "${2}")
-            basename=$(basename "${2}")
-            if ! compgen -G "${1}/${searchdir}" > /dev/null; then
-                echo "search pattern <${1}/${searchdir}> <${basename}> does not exist"
-                return 1
-            fi
-            # shellcheck disable=SC2086 # SC2086 does not apply, searchdir can contain wild cards, it cannot be quoted
-            while IFS= read -r -d $'\\0' f
-            do
-                if [[ -d "${f}" ]]; then
-                    link_files_impl "${1}" "${rel_path}" "${3}" "${quiet}"
-                else
-                    if [[ -L "${f}" ]]; then
-                        rel_path=$( realpath --no-symlinks --relative-to="${1}" "${f}" )
-                    else
-                        rel_path=$( realpath -se --relative-to="${1}" "${f}" )
-                    fi
-                    dir_path=$(dirname "${rel_path}")
-                    mkdir -p "${3}/${dir_path}"
-                    [ "${quiet}" != "--quiet" ] && echo "installing ${f} to ${3}/${dir_path}"
-                    rm -rf "${3}/${dir_path}/$(basename "${f}")" # fixes incremental build "are the same file"
-                    ln -f "${f}" "${3}/${dir_path}"
-                fi
-                found="yes"
-            done < <(find "${1}"/${searchdir} -maxdepth 1 -mindepth 1 -name "${basename}" -printf '%p\\0')
-            if [ "yes" = "${found:-}" ]; then
-                return 0
+    local found searchdir basename rel_path dir_path
+    searchdir=$(dirname "${2}")
+    basename=$(basename "${2}")
+    if ! compgen -G "${1}/${searchdir}" > /dev/null; then
+        echo "search pattern <${1}/${searchdir}> <${basename}> does not exist"
+        return 1
+    fi
+    # shellcheck disable=SC2086 # SC2086 does not apply, searchdir can contain wild cards, it cannot be quoted
+    while IFS= read -r -d $'\\0' f
+    do
+        if [[ -d "${f}" ]]; then
+            link_files_impl "${1}" "${rel_path}" "${3}" "${quiet}"
+        else
+            if [[ -L "${f}" ]]; then
+                rel_path=$( realpath --no-symlinks --relative-to="${1}" "${f}" )
             else
-                return 1
+                rel_path=$( realpath -se --relative-to="${1}" "${f}" )
             fi
-        }
-        """
-    )
-]
+            dir_path=$(dirname "${rel_path}")
+            mkdir -p "${3}/${dir_path}"
+            [ "${quiet}" != "--quiet" ] && echo "installing ${f} to ${3}/${dir_path}"
+            rm -rf "${3}/${dir_path}/$(basename "${f}")" # fixes incremental build "are the same file"
+            ln -f "${f}" "${3}/${dir_path}"
+        fi
+        found="yes"
+    done < <(find "${1}"/${searchdir} -maxdepth 1 -mindepth 1 -name "${basename}" -printf '%p\\0')
+    if [ "yes" = "${found:-}" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
 
+# setup chroot from Ubuntu Base
+# 1: work dir, 2: ubuntu series
+setup_chroot_base() {
+    local work_dir="${1}"
+    local series="${2}"
+    local ubuntu_base="${work_dir}/ubuntu-base-${series}-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+    local base_url="https://cdimage.ubuntu.com/ubuntu-base/${series}/daily/current/${series}-base-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+    local base_url_in_dev="https://cdimage.ubuntu.com/ubuntu-base/daily/current/${series}-base-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+    local url_status
+    rm -rf "${ubuntu_base}"
+    url_status=$(curl -s -w "%{http_code}" "${base_url}" --output "${ubuntu_base}")
+    if [ "${url_status}" != "200" ]; then
+        rm -rf "${ubuntu_base}"
+        url_status=$(curl -s -w "%{http_code}" "${base_url_in_dev}" --output "${ubuntu_base}")
+        if [ "${url_status}" != "200" ]; then
+            echo -e "ERROR: failed to fetch Ubuntu base for Ubuntu ${series} release from: \n${base_url}\nor\n${base_url_in_dev}"
+            exit 1
+        fi
+    fi
+    rm -rf "${UC_INITRD_ROOT}"
+    mkdir -p "${UC_INITRD_ROOT}"
+    tar --extract --file "${ubuntu_base}" --directory "${UC_INITRD_ROOT}"
+    cp --no-dereference /etc/resolv.conf "${UC_INITRD_ROOT}/etc/resolv.conf"
+    # setup /dev/null as it's used to mask systemd service files
+    touch "${UC_INITRD_ROOT}/dev/null"
+}
 
-_setup_ubuntu_base_chroot_fnc = [
-    textwrap.dedent(
-        """
-        # setup chroot from Ubuntu Base
-        # 1: work dir, 2: ubuntu series
-        setup_chroot_base() {
-            local work_dir="${1}"
-            local series="${2}"
-            local ubuntu_base="${work_dir}/ubuntu-base-${series}-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
-            local base_url="https://cdimage.ubuntu.com/ubuntu-base/${series}/daily/current/${series}-base-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
-            local base_url_in_dev="https://cdimage.ubuntu.com/ubuntu-base/daily/current/${series}-base-${CRAFT_ARCH_BUILD_FOR}.tar.gz"
-            local url_status
-            rm -rf "${ubuntu_base}"
-            url_status=$(curl -s -w "%{http_code}" "${base_url}" --output "${ubuntu_base}")
-            if [ "${url_status}" != "200" ]; then
-                rm -rf "${ubuntu_base}"
-                url_status=$(curl -s -w "%{http_code}" "${base_url_in_dev}" --output "${ubuntu_base}")
-                if [ "${url_status}" != "200" ]; then
-                    echo -e "ERROR: failed to fetch Ubuntu base for Ubuntu ${series} release from: \n${base_url}\nor\n${base_url_in_dev}"
-                    exit 1
-                fi
-            fi
-            rm -rf "${UC_INITRD_ROOT}"
-            mkdir -p "${UC_INITRD_ROOT}"
-            tar --extract --file "${ubuntu_base}" --directory "${UC_INITRD_ROOT}"
-            cp --no-dereference /etc/resolv.conf "${UC_INITRD_ROOT}/etc/resolv.conf"
-            # setup /dev/null as it's used to mask systemd service files
-            touch "${UC_INITRD_ROOT}/dev/null"
-        }
-        """
-    )
-]
+# add snappy-dev/image ppa to the chroot
+# import ppa keys for the ppa
+# 1: ubuntu series, 2: ppa fingerprint
+chroot_add_snappy_dev_ppa() {
+    set +x
+    local series="${1}"
+    local key_fingerprint="${2}"
+    local chroot_home="${UC_INITRD_ROOT}"
+    local source_file="/etc/apt/sources.list.d/snappy-dev-image.sources"
+    local key_file="/etc/apt/keyrings/snappy-dev.gpg"
+    local snappy_key="/usr/share/keyrings/snappy-dev.kbx"
+    run_chroot "${chroot_home}" "rm -rf /root/.gnupg ${key_file} ${snappy_key}"
+    run_chroot "${chroot_home}" "mkdir -p --mode 700 /root/.gnupg"
+    run_chroot "${chroot_home}" "gpg \\
+                --homedir /root/.gnupg \\
+                --no-default-keyring \\
+                --keyring "${snappy_key}" \\
+                --keyserver keyserver.ubuntu.com \\
+                --recv-keys "${key_fingerprint}""
 
-_chroot_add_snappy_dev_ppa_fnc = [
-    textwrap.dedent(
-        """
-        # add snappy-dev/image ppa to the chroot
-        # import ppa keys for the ppa
-        # 1: ubuntu series, 2: ppa fingerprint
-        chroot_add_snappy_dev_ppa() {
-            set +x
-            local series="${1}"
-            local key_fingerprint="${2}"
-            local chroot_home="${UC_INITRD_ROOT}"
-            local source_file="/etc/apt/sources.list.d/snappy-dev-image.sources"
-            local key_file="/etc/apt/keyrings/snappy-dev.gpg"
-            local snappy_key="/usr/share/keyrings/snappy-dev.kbx"
-            run_chroot "${chroot_home}" "rm -rf /root/.gnupg ${key_file} ${snappy_key}"
-            run_chroot "${chroot_home}" "mkdir -p --mode 700 /root/.gnupg"
-            run_chroot "${chroot_home}" "gpg \\
-                        --homedir /root/.gnupg \\
-                        --no-default-keyring \\
-                        --keyring "${snappy_key}" \\
-                        --keyserver keyserver.ubuntu.com \\
-                        --recv-keys "${key_fingerprint}""
+    run_chroot "${chroot_home}" "gpg \\
+                --homedir /root/.gnupg \\
+                --no-default-keyring \\
+                --keyring "${snappy_key}" \\
+                --export \\
+                --out "${key_file}""
 
-            run_chroot "${chroot_home}" "gpg \\
-                        --homedir /root/.gnupg \\
-                        --no-default-keyring \\
-                        --keyring "${snappy_key}" \\
-                        --export \\
-                        --out "${key_file}""
+    tee "${chroot_home}/${source_file}" <<EOF
+Types: deb
+URIs: https://ppa.launchpadcontent.net/snappy-dev/image/ubuntu/
+Suites: ${series}
+Components: main
+Signed-By: ${key_file}
+EOF
+    set -x
+}
 
-            tee "${chroot_home}/${source_file}" <<EOF
-        Types: deb
-        URIs: https://ppa.launchpadcontent.net/snappy-dev/image/ubuntu/
-        Suites: ${series}
-        Components: main
-        Signed-By: ${key_file}
-        EOF
-            set -x
-        }
-        """
-    )
-]
+# clean any existing mounts for the chroot function
+_clean_chroot() {
+    set +x
+    local chroot_home="${1}"
+    if [ -z "${chroot_home}" ]; then
+        echo "Missing chroot home to clean"
+        return
+    fi
+    # ensure no chroot processes are left running
+    for pid in $(ls /proc | grep -E '^[0-9]+$'); do
+        if [ -e "/proc/${pid}/root" ] && [ "$(readlink -f /proc/${pid}/root)" = "${chroot_home}" ]; then
+            echo "Killing PID ${pid} inside ${chroot_home} chroot"
+            kill -9 "${pid}"
+        fi
+    done
+    for m in proc run sys dev/pts dev/zero dev/full dev/random dev/urandom dev/tty dev/null dev
+    do
+        if grep "${chroot_home}/${m}" /proc/self/mounts > /dev/null; then
+            umount "${chroot_home}/${m}" || sleep 2 || umount "${chroot_home}/${m}"
+        fi
+    done
+    set -x
+}
 
+_chroot_configured="no"
+# setup necessary mounts for the chroot function
+_setup_chroot() {
+    set +x
+    if [ "${_chroot_configured}" = "yes" ]; then
+        return
+    fi
+    local chroot_home="${1}"
+    for m in proc run sys dev dev/pts dev/null dev/zero dev/full dev/random dev/urandom dev/tty
+    do
+        mount --bind "/${m}" "${chroot_home}/${m}"
+    done
+    _chroot_configured="yes"
+    set -x
+}
 
-_chroot_run_cmd_fnc = [
-    textwrap.dedent(
-        """
-        # clean any existing mounts for the chroot function
-        _clean_chroot() {
-            set +x
-            local chroot_home="${1}"
-            if [ -z "${chroot_home}" ]; then
-                echo "Missing chroot home to clean"
-                return
-            fi
-            # ensure no chroot processes are left running
-            for pid in $(ls /proc | grep -E '^[0-9]+$'); do
-                if [ -e "/proc/${pid}/root" ] && [ "$(readlink -f /proc/${pid}/root)" = "${chroot_home}" ]; then
-                    echo "Killing PID ${pid} inside ${chroot_home} chroot"
-                    kill -9 "${pid}"
-                fi
-            done
-            for m in proc run sys dev/pts dev/zero dev/full dev/random dev/urandom dev/tty dev/null dev
-            do
-                if grep "${chroot_home}/${m}" /proc/self/mounts > /dev/null; then
-                    umount "${chroot_home}/${m}" || sleep 2 || umount "${chroot_home}/${m}"
-                fi
-            done
-            set -x
-        }
-
-        _chroot_configured="no"
-        # setup necessary mounts for the chroot function
-        _setup_chroot() {
-            set +x
-            if [ "${_chroot_configured}" = "yes" ]; then
-                return
-            fi
-            local chroot_home="${1}"
-            for m in proc run sys dev dev/pts dev/null dev/zero dev/full dev/random dev/urandom dev/tty
-            do
-                mount --bind "/${m}" "${chroot_home}/${m}"
-            done
-            _chroot_configured="yes"
-            set -x
-        }
-
-        # run command with chroot
-        # 1: chroot home, 2: command to run
-        run_chroot() {
-            set +x
-            local chroot_home="${1}"
-            local cmd="${2}"
-            trap "_clean_chroot ${chroot_home}" EXIT
-            _setup_chroot "${chroot_home}"
-            chroot "${chroot_home}" /bin/bash -c "${cmd}"
-            set -x
-        }
+# run command with chroot
+# 1: chroot home, 2: command to run
+run_chroot() {
+    set +x
+    local chroot_home="${1}"
+    local cmd="${2}"
+    trap "_clean_chroot ${chroot_home}" EXIT
+    _setup_chroot "${chroot_home}"
+    chroot "${chroot_home}" /bin/bash -c "${cmd}"
+    set -x
+}
         """
     )
 ]
