@@ -307,7 +307,7 @@ def _setup_initrd_chroot_fnc_cmd(initrd_ubuntu_core_initramfs_deb: Optional[str]
 
             if [ ! -e "${{work_dir}}/.${{UC_INITRD_ROOT_NAME}}.firmware" ]; then
                 rm -rf "${{UC_INITRD_ROOT}}"/usr/lib/firmware/*
-                link_files "${{KERNEL_FIRMWARE}}" "*" "${{UC_INITRD_ROOT}}/usr/lib/firmware" "--quiet"
+                cp --archive --link "${{KERNEL_FIRMWARE}}" "${{UC_INITRD_ROOT}}/usr/lib"
                 touch "${{work_dir}}/.${{UC_INITRD_ROOT_NAME}}.firmware"
             fi
 
@@ -318,7 +318,7 @@ def _setup_initrd_chroot_fnc_cmd(initrd_ubuntu_core_initramfs_deb: Optional[str]
 
             if [ ! -e "${{work_dir}}/.${{UC_INITRD_ROOT_NAME}}.modules" ]; then
                 rm -rf "${{UC_INITRD_ROOT}}"/usr/lib/modules/*
-                link_files "${{KERNEL_MODULES}}" "*" "${{UC_INITRD_ROOT}}/usr/lib/modules" "--quiet"
+                cp --archive --link "${{KERNEL_MODULES}}" "${{UC_INITRD_ROOT}}/usr/lib"
                 # remove potentially dangling source link
                 rm -rf ${{UC_INITRD_ROOT}}/usr/lib/modules/*/build
                 touch "${{work_dir}}/.${{UC_INITRD_ROOT_NAME}}.modules"
