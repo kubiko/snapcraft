@@ -928,10 +928,11 @@ _post_install_steps_cmd = [
         KERNEL_RELEASE=$(cat "${CRAFT_PART_BUILD}/include/config/kernel.release")
 
         echo "Copying kernel image..."
-        # if ${KERNEL_IMAGE_TARGET} already exists, replace it, we are probably re-running
+        # if "vmlinuz" already exists, replace it, we are probably re-running
         # build
-        [ -e "${CRAFT_PART_INSTALL}/${KERNEL_IMAGE_TARGET}" ] && rm -rf "${CRAFT_PART_INSTALL}/${KERNEL_IMAGE_TARGET}"
-        mv "${KERNEL_BUILD_ARCH_DIR}/${KERNEL_IMAGE_TARGET}" "${CRAFT_PART_INSTALL}/${KERNEL_IMAGE_TARGET}"
+        [ -e "${CRAFT_PART_INSTALL}/vmlinuz" ] &&s rm -rf "${CRAFT_PART_INSTALL}/vmlinuz"
+        mv "${KERNEL_BUILD_ARCH_DIR}/${KERNEL_IMAGE_TARGET}" "${CRAFT_PART_INSTALL}/vmlinuz"
+        ln -f "${CRAFT_PART_INSTALL}/vmlinuz" "${CRAFT_PART_INSTALL}/vmlinuz-${KERNEL_RELEASE}"
 
         echo "Copying System map..."
         [ -e "${CRAFT_PART_INSTALL}/System.map" ] && rm -rf "${CRAFT_PART_INSTALL}"/System.map*
