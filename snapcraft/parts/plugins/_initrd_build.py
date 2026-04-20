@@ -540,14 +540,14 @@ def _make_initrd_cmd(
             echo "Building kernel.efi"
             rm -rf ${{UC_INITRD_ROOT}}/boot/kernel.efi*
             # try default kernel target first
-            if [ -e "${{CRAFT_STAGE}}/{default_kernel_target}" ]; then
-                ln -f "${{CRAFT_STAGE}}/{default_kernel_target}" "${{UC_INITRD_ROOT}}/boot/kernel.bin-${{KERNEL_RELEASE}}"
+            if [ -e "${{CRAFT_STAGE}}/vmlinuz" ]; then
+                ln -f "${{CRAFT_STAGE}}/vmlinuz" "${{UC_INITRD_ROOT}}/boot/vmlinuz-${{KERNEL_RELEASE}}"
             # try other kernel targets as fallback
             else
                 for t in bzImage zImage Image uImage vmlinux.strip
                 do
                     if [ -e "${{CRAFT_STAGE}}/${{t}}" ]; then
-                        ln -f "${{CRAFT_STAGE}}/${{t}}" "${{UC_INITRD_ROOT}}/boot/kernel.bin-${{KERNEL_RELEASE}}"
+                        ln -f "${{CRAFT_STAGE}}/${{t}}" "${{UC_INITRD_ROOT}}/boot/vmlinuz-${{KERNEL_RELEASE}}"
                         break;
                     fi
                 done
@@ -559,7 +559,7 @@ def _make_initrd_cmd(
                         --key {signing_key} \\
                         --cert {certificate} \\
                         --initrd /boot/initrd.img \\
-                        --kernel /boot/kernel.bin \\
+                        --kernel /boot/vmlinuz \\
                         --output /boot/kernel.efi"
 
             echo "Installing created kernel.efi image"
