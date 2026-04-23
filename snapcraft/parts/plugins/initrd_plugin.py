@@ -54,27 +54,15 @@ The following initramfs-specific options are provided by this plugin:
       relative paths to stage directory.
       <stage/part install dir>/firmware/* -> initrd:/lib/firmware/*
 
-    - initrd-overlay
-      (string; default: none)
-      Optional overlay to be applied to built initrd.
-      This option is designed to provide easy way to apply initrd overlay for
-      cases modifies initrd scripts for pre uc20 initrds.
-      Value is relative path, in stage directory. and related part needs to be
-      built before initrd part. During build it will be expanded to
-      ${CRAFT_STAGE}/{initrd-overlay}
-      Default: none
-
     - initrd-addons
       (array of string; default: none)
       Optional list of files to be added to the initrd.
-      Function is similar to initrd-overlay, only it works on per file
-      selection without a need to have overlay in dedicated directory.
       This option is designed to provide easy way to add additional content
       to initrd for cases like full disk encryption support, when device
       specific hook needs to be added to the initrd.
       Values are relative path from stage directory, so related part(s)
       need to be built before kernel part.
-      During build it will be expanded to ${CRAFT_STAGE}/{initrd-addon}
+      During build it will be expanded to ${CRAFT_STAGE}/addons/{initrd-addon}
       Default: none
 
     - initrd-ubuntu-core-initramfs-deb
@@ -113,7 +101,6 @@ class InitrdPluginProperties(plugins.PluginProperties, frozen=True):
     initrd_modules: list[str] | None = None
     initrd_configured_modules: list[str] | None = None
     initrd_firmware: list[str] | None = None
-    initrd_overlay: str | None = None
     initrd_addons: list[str] | None = None
     initrd_ubuntu_core_initramfs_deb: str | None = None
 
@@ -190,7 +177,6 @@ class InitrdPlugin(plugins.Plugin):
             initrd_configured_modules=self.options.initrd_configured_modules,
             initrd_firmware=self.options.initrd_firmware,
             initrd_addons=self.options.initrd_addons,
-            initrd_overlay=self.options.initrd_overlay,
             initrd_ubuntu_core_initramfs_deb=self.options.initrd_ubuntu_core_initramfs_deb,
             initrd_ko_use_workaround=False,
             build_efi_image=self.options.initrd_build_efi_image,

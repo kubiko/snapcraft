@@ -30,7 +30,6 @@ class Initrdv2PluginProperties:
     initrd_modules: Optional[List[str]]
     initrd_configured_modules: Optional[List[str]]
     initrd_firmware: Optional[List[str]]
-    initrd_overlay: Optional[str]
     initrd_addons: Optional[List[str]]
     initrd_ubuntu_core_initramfs_deb: Optional[str]
 
@@ -49,7 +48,6 @@ class TestPluginInitrd(TestCase):
         initrdconfiguredmodules=None,
         initrdstagefirmware=False,
         initrdfirmware=None,
-        initrdoverlay=None,
         initrdaddons=None,
         initrdubuntucoreinitramfsdeb=None,
         arch=platform.machine(),
@@ -60,7 +58,6 @@ class TestPluginInitrd(TestCase):
             initrd_configured_modules = initrdconfiguredmodules
             initrd_stage_firmware = initrdstagefirmware
             initrd_firmware = initrdfirmware
-            initrd_overlay = initrdoverlay
             initrd_addons = initrdaddons
             initrd_ubuntu_core_initramfs_deb = initrdubuntucoreinitramfsdeb
 
@@ -104,10 +101,6 @@ class TestPluginInitrd(TestCase):
                         "uniqueItems": True,
                         "items": {"type": "string"},
                         "default": [],
-                    },
-                    "initrd-overlay": {
-                        "type": "string",
-                        "default": "",
                     },
                     "initrd-addons": {
                         "type": "array",
@@ -153,7 +146,6 @@ class TestPluginInitrd(TestCase):
         self.assertEqual(opt.initrd_modules, None)
         self.assertEqual(opt.initrd_configured_modules, None)
         self.assertEqual(opt.initrd_firmware, None)
-        self.assertEqual(opt.initrd_overlay, None)
         self.assertEqual(opt.initrd_addons, None)
         self.assertEqual(opt.initrd_ubuntu_core_initramfs_deb, None)
 
@@ -217,7 +209,6 @@ class TestPluginInitrd(TestCase):
         assert _is_sub_array(build_commands, _initrd_overlay_features_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_firmware_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_addons_cmd)
-        assert not _is_sub_array(build_commands, _intatll_initrd_overlay_cmd)
         assert _is_sub_array(build_commands, _prepare_ininird_features_cmd)
         assert _is_sub_array(build_commands, _clean_old_initrd_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_workaroud_cmd)
@@ -252,7 +243,6 @@ class TestPluginInitrd(TestCase):
         assert _is_sub_array(build_commands, _initrd_overlay_features_cmd)
         assert _is_sub_array(build_commands, _install_initrd_firmware_cmd)
         assert _is_sub_array(build_commands, _install_initrd_addons_cmd)
-        assert not _is_sub_array(build_commands, _intatll_initrd_overlay_cmd)
         assert _is_sub_array(build_commands, _prepare_ininird_features_cmd)
         assert _is_sub_array(build_commands, _clean_old_initrd_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_workaroud_cmd)
@@ -265,7 +255,6 @@ class TestPluginInitrd(TestCase):
         plugin = self._setup_test(
             initrdmodules=["dm-crypt", "slimbus"],
             initrdconfiguredmodules=["libarc4"],
-            initrdoverlay="my-overlay",
             initrdubuntucoreinitramfsdeb="${CRAFT_STAGE}/ubuntu-core-initramfs_my_build.deb"
         )
 
@@ -285,7 +274,6 @@ class TestPluginInitrd(TestCase):
         assert _is_sub_array(build_commands, _initrd_overlay_features_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_firmware_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_addons_cmd)
-        assert _is_sub_array(build_commands, _intatll_initrd_overlay_cmd)
         assert _is_sub_array(build_commands, _prepare_ininird_features_cmd)
         assert _is_sub_array(build_commands, _clean_old_initrd_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_workaroud_cmd)
@@ -298,7 +286,6 @@ class TestPluginInitrd(TestCase):
         plugin = self._setup_test(
             initrdmodules=["dm-crypt", "slimbus"],
             initrdconfiguredmodules=["libarc4"],
-            initrdoverlay="my-overlay",
             arch="armv7l",
         )
 
@@ -318,7 +305,6 @@ class TestPluginInitrd(TestCase):
         assert _is_sub_array(build_commands, _initrd_overlay_features_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_firmware_cmd)
         assert not _is_sub_array(build_commands, _install_initrd_addons_cmd)
-        assert _is_sub_array(build_commands, _intatll_initrd_overlay_cmd)
         assert _is_sub_array(build_commands, _prepare_ininird_features_cmd)
         assert _is_sub_array(build_commands, _clean_old_initrd_cmd)
         assert _is_sub_array(build_commands, _initrd_tool_workaroud_cmd)
@@ -798,16 +784,8 @@ _install_initrd_addons_cmd = [
         for a in usr/bin/cryptsetup usr/lib/my-arch/libcrypto.so
         do
             echo "Copy overlay: ${a}"
-            link_files "${CRAFT_STAGE}" "${a}" "${uc_initrd_feature_overlay}"
+            link_files "${CRAFT_STAGE}/addons" "${a}" "${uc_initrd_feature_overlay}"
         done
-        """
-    )
-]
-
-_intatll_initrd_overlay_cmd = [
-    textwrap.dedent(
-        """
-        link_files "${CRAFT_STAGE}/my-overlay" "*" "${uc_initrd_feature_overlay}"
         """
     )
 ]

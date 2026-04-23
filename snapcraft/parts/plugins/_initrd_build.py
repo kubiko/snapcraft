@@ -357,7 +357,6 @@ def _setup_initrd_build_env_cmd() -> List[str]:
 def _make_initrd_cmd(
     initrd_firmware: Optional[List[str]],
     initrd_addons: Optional[List[str]],
-    initrd_overlay: Optional[str],
     initrd_ko_use_workaround: bool,
     build_efi_image: Optional[bool],
     efi_image_key: Optional[str],
@@ -432,15 +431,6 @@ def _make_initrd_cmd(
             """
         )
 
-    # apply overlay if defined
-    cmd_prepare_initrd_overlay = ""
-    if initrd_overlay:
-        cmd_prepare_initrd_overlay = textwrap.dedent(
-            f"""
-            link_files "${{CRAFT_STAGE}}/{initrd_overlay}" "*" "${{uc_initrd_feature_overlay}}"
-            """
-        )
-
     # apply overlay addons if defined
     cmd_prepare_initrd_addons = ""
     if initrd_addons:
@@ -450,7 +440,7 @@ def _make_initrd_cmd(
             for a in {' '.join(initrd_addons)}
             do
                 echo "Copy overlay: ${{a}}"
-                link_files "${{CRAFT_STAGE}}" "${{a}}" "${{uc_initrd_feature_overlay}}"
+                link_files "${{CRAFT_STAGE}}/addons" "${{a}}" "${{uc_initrd_feature_overlay}}"
             done
             """
         )
@@ -574,7 +564,6 @@ def _make_initrd_cmd(
         cmd_prepare_modules_feature,
         cmd_prepare_initrd_overlay_feature,
         cmd_prepare_initrd_overlay_firmware,
-        cmd_prepare_initrd_overlay,
         cmd_prepare_initrd_addons,
         cmd_prepare_snap_bootstrap_feature,
         'echo "Create new initrd..."',
@@ -594,7 +583,6 @@ def get_build_commands(
     initrd_configured_modules: Optional[List[str]],
     initrd_firmware: Optional[List[str]],
     initrd_addons: Optional[List[str]],
-    initrd_overlay: Optional[str],
     initrd_ubuntu_core_initramfs_deb: Optional[str],
     initrd_ko_use_workaround: bool,
     build_efi_image: Optional[bool] = False,
@@ -626,7 +614,6 @@ def get_build_commands(
         *_make_initrd_cmd(
             initrd_firmware=initrd_firmware,
             initrd_addons=initrd_addons,
-            initrd_overlay=initrd_overlay,
             initrd_ko_use_workaround=initrd_ko_use_workaround,
             build_efi_image=build_efi_image,
             efi_image_key=efi_image_key,
