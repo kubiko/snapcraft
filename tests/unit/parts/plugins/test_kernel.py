@@ -166,7 +166,7 @@ class TestPluginKernel:
         opt = plugin.options
 
         assert opt.kernel_kdefconfig is None
-        assert opt.kernel_kconfigflavour == "generic"  # default value
+        assert opt.kernel_ubuntu_kconfigflavour == "generic"  # default value
         assert opt.kernel_kconfigs is None
         assert opt.kernel_image_target == "bzImage"
         assert not opt.kernel_enable_zfs_support
@@ -183,7 +183,7 @@ class TestPluginKernel:
         opt = plugin.options
 
         assert opt.kernel_kdefconfig == ["snappy_defconfig"]
-        assert opt.kernel_kconfigflavour == "generic"  # default value
+        assert opt.kernel_ubuntu_kconfigflavour == "generic"  # default value
         assert opt.kernel_kconfigs is None
         assert opt.kernel_image_target == "Image"
         assert not opt.kernel_enable_zfs_support
@@ -200,7 +200,7 @@ class TestPluginKernel:
         opt = plugin.options
 
         assert opt.kernel_kdefconfig == ["snappy_defconfig"]
-        assert opt.kernel_kconfigflavour == "generic"  # default value
+        assert opt.kernel_ubuntu_kconfigflavour == "generic"  # default value
         assert opt.kernel_kconfigs is None
         assert opt.kernel_image_target == {"arm64": "Image", "armhf": "Image.gz"}
         assert not opt.kernel_enable_zfs_support
@@ -321,7 +321,7 @@ class TestPluginKernel:
         plugin = setup_method_fixture(
             new_dir,
             properties={
-                "kernel-kconfigflavour": "raspi",
+                "kernel-ubuntu-kconfigflavour": "raspi",
                 "kernel-kconfigs": ["CONFIG_DEBUG_INFO=n", "CONFIG_DM_CRYPT=y"],
                 "kernel-enable-zfs-support": True,
                 "kernel-enable-perf": True,
@@ -359,7 +359,7 @@ class TestPluginKernel:
         plugin = setup_method_fixture(
             new_dir,
             properties={
-                "kernel-kconfigflavour": "raspi",
+                "kernel-ubuntu-kconfigflavour": "raspi",
                 "kernel-kconfigs": ["CONFIG_DEBUG_INFO=n", "CONFIG_DM_CRYPT=y"],
                 "kernel-image-target": {"arm64": "Image", "armhf": "Image.gz"},
                 "kernel-enable-zfs-support": True,

@@ -22,7 +22,7 @@ The following kernel-specific options are provided by this plugin:
       (list of kdefconfigs, default: none))
       defconfig target to use as the base configuration. default: "defconfig"
 
-    - kernel-kconfigflavour:
+    - kernel-ubuntu-kconfigflavour:
       (string; default: generic)
       Ubuntu config flavour to use as base configuration. If provided this
       option wins over kernel-kdefconfig. default: None
@@ -75,7 +75,7 @@ class KernelPluginProperties(plugins.PluginProperties, frozen=True):
     plugin: Literal["kernel"] = "kernel"
 
     kernel_kconfigs: list[str] | None = None
-    kernel_kconfigflavour: str = "generic"
+    kernel_ubuntu_kconfigflavour: str = "generic"
     kernel_kdefconfig: list[str] | None = None
     kernel_image_target: str | dict[str, Any] | None = None
     kernel_enable_zfs_support: bool = False
@@ -189,7 +189,7 @@ class KernelPlugin(plugins.Plugin):
         self,
     ) -> list[str]:  # pylint: disable=missing-function-docstring
         logger.info("Getting build commands...")
-        kconfigflavour = self.options.kernel_kconfigflavour
+        kconfigflavour = self.options.kernel_ubuntu_kconfigflavour
         if self.options.kernel_kdefconfig:
             kconfigflavour = ""
         return _kernel_build.get_build_commands(
