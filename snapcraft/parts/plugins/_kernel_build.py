@@ -340,9 +340,12 @@ def _call_check_config_cmd() -> list[str]:
 
 
 def _get_build_command(
-    make_arg: list[str], make_targets: list[str], config_flavour: str
+    kernel_arch: str, make_arg: list[str], make_targets: list[str], config_flavour: str
 ) -> list[str]:
     """Build the kernel."""
+    if not kernel_arch == "x86":
+        make_targets.append("dtbs")
+
     # if config_flavour is used, determine ABI version and set KERNELRELEASE name
     if config_flavour:
         return [
@@ -465,12 +468,6 @@ def get_build_commands(
         'INSTALL_MOD_PATH="${CRAFT_PART_INSTALL}"',
     ]
 
-    if not kernel_arch == "x86":
-        make_targets.append("dtbs")
-        make_install_targets.extend(
-            ["dtbs_install", 'INSTALL_DTBS_PATH="${CRAFT_PART_INSTALL}/dtbs"']
-        )
-
     # kernel source can be either CRAFT_PART_SRC or CRAFT_PROJECT_DIR
     kernel_src_cmd = textwrap.dedent(
         """
@@ -497,11 +494,13 @@ def get_build_commands(
         "",
         *_call_check_config_cmd(),
         *_get_build_command(
+            kernel_arch=kernel_arch,
             make_arg=make_arg,
             make_targets=make_targets,
             config_flavour=config_flavour,
         ),
         *_get_install_command(
+            kernel_arch=kernel_arch,
             make_arg=make_arg,
             make_install_targets=make_install_targets,
         ),
@@ -563,15 +562,36 @@ def _get_post_install_cmd() -> list[str]:
         ),
     ]
 
+def _get_install_dtbs_command(
+        kernel_arch: str,make_arg: list[str],
+) -> list[str]:
+    # install dtbs to installdir
+    if not kernel_arch == "x86":
+        return [
+            textwrap.dedent(
+                f"""
+                echo "Installing dtbs..."
+                # run with -j1 or 6.x kernels often fail
+                make \\
+                    -j1 \\
+                    {" ".join(make_arg)} \\
+                    CONFIG_PREFIX="${{CRAFT_PART_INSTALL}}" \\
+                    dtbs_install INSTALL_DTBS_PATH="${{CRAFT_PART_INSTALL}}/dtbs"
+                """
+            ),
+        ]
+    else:
+        return []
 
 def _get_install_command(
+    kernel_arch: str,
     make_arg: list[str],
     make_install_targets: list[str],
 ) -> list[str]:
     # install to installdir
     install_cmd = textwrap.dedent(
         f"""
-        echo "Installing kernel build..."
+        echo "Installing kernel modules..."
         make \\
             -j "$(nproc)" \\
             {" ".join(make_arg)} \\
@@ -581,6 +601,7 @@ def _get_install_command(
     )
 
     return [
+        *_get_install_dtbs_command(kernel_arch=kernel_arch, make_arg=make_arg),
         install_cmd,
         # add post-install steps
         *_get_post_install_cmd(),
